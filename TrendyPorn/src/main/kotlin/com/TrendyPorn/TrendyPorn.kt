@@ -81,13 +81,15 @@ class TrendyPorn : MainAPI() {
         val link = document.selectFirst("source")!!.attr("src")
 
         callback.invoke(
-            ExtractorLink(
+            newExtractorLink(
                 this.name,
                 this.name,
                 link,
-                referer = "",
-                quality = Qualities.Unknown.value,
+                INFER_TYPE
             )
+            {
+                referer = ""
+            }
         )
         return true
     }

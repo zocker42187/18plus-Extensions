@@ -3,8 +3,10 @@ package com.CXXX
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.INFER_TYPE
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 
 class SxyPrn : MainAPI() {
     override var mainUrl = "https://sxyprn.com"
@@ -132,13 +134,15 @@ class SxyPrn : MainAPI() {
         url = fixUrl(tmp.joinToString("/"))
 
         callback.invoke(
-            ExtractorLink(
+            newExtractorLink(
                 this.name,
                 this.name,
                 url,
-                referer = "",
-                quality = Qualities.Unknown.value
+                INFER_TYPE
             )
+            {
+                referer = ""
+            }
         )
         return true
     }

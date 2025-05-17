@@ -60,7 +60,8 @@ class NoodleMagazineProvider : MainAPI() { // all providers must be an instance 
     override suspend fun load(url: String): LoadResponse {
         val document = app.get(url).document
         val title = document.selectFirst("div.l_info h1")?.text()?.trim() ?: "null"
-        val poster = document.selectFirst("""meta[property="og:image"]""")?.attr("content") ?: "null"
+        val poster =
+            document.selectFirst("""meta[property="og:image"]""")?.attr("content") ?: "null"
 
         val recommendations = document.select("div.item").mapNotNull { it.toSearchResult() }
 
@@ -90,13 +91,15 @@ class NoodleMagazineProvider : MainAPI() { // all providers must be an instance 
             for (i in 0 until sources.length()) {
                 val source = sources.getJSONObject(i)
                 extlinkList.add(
-                    ExtractorLink(
+                    newExtractorLink(
                         source = name,
                         name = name,
                         url = source.getString("file"),
-                        referer = data,
-                        quality = getQualityFromName(source.getString("label"))
                     )
+                    {
+                        this.referer = data
+                        this.quality = getQualityFromName(source.getString("label"))
+                    }
                 )
             }
             extlinkList.forEach(callback)

@@ -11,6 +11,8 @@ import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.lagradost.cloudstream3.network.CloudflareKiller
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -19,6 +21,7 @@ import kotlin.collections.ArrayList
 
 class Hanime : MainAPI() {
     private val globalTvType = TvType.NSFW
+
     //private val interceptor = CloudflareKiller()
     private var globalHeaders = mapOf<String, String>()
     private val DEV = "DevDebug"
@@ -39,6 +42,7 @@ class Hanime : MainAPI() {
 
             return date.toIntOrNull()
         }
+
         private fun isNumber(num: String) = (num.toIntOrNull() != null)
 
         private fun getTitle(title: String): String {
@@ -47,7 +51,7 @@ class Hanime : MainAPI() {
             } else {
                 if (isNumber(title.trim().split(" ").last())) {
                     val split = title.trim().split(" ")
-                    return split.slice(0..split.size-2).joinToString(" ").trim()
+                    return split.slice(0..split.size - 2).joinToString(" ").trim()
                 } else {
                     return title.trim()
                 }
@@ -55,30 +59,35 @@ class Hanime : MainAPI() {
         }
     }
 
-    private data class HpHentaiVideos (
-        @JsonProperty("id") val id : Int,
-        @JsonProperty("name") val name : String,
-        @JsonProperty("slug") val slug : String,
-        @JsonProperty("released_at_unix") val releasedAt : Int,
-        @JsonProperty("poster_url") val posterUrl : String,
-        @JsonProperty("cover_url") val coverUrl : String
+    private data class HpHentaiVideos(
+        @JsonProperty("id") val id: Int,
+        @JsonProperty("name") val name: String,
+        @JsonProperty("slug") val slug: String,
+        @JsonProperty("released_at_unix") val releasedAt: Int,
+        @JsonProperty("poster_url") val posterUrl: String,
+        @JsonProperty("cover_url") val coverUrl: String
     )
-    private data class HpSections (
-        @JsonProperty("title") val title : String,
-        @JsonProperty("hentai_video_ids") val hentaiVideoIds : List<Int>
+
+    private data class HpSections(
+        @JsonProperty("title") val title: String,
+        @JsonProperty("hentai_video_ids") val hentaiVideoIds: List<Int>
     )
-    private data class HpLanding (
-        @JsonProperty("sections") val sections : List<HpSections>,
-        @JsonProperty("hentai_videos") val hentaiVideos : List<HpHentaiVideos>
+
+    private data class HpLanding(
+        @JsonProperty("sections") val sections: List<HpSections>,
+        @JsonProperty("hentai_videos") val hentaiVideos: List<HpHentaiVideos>
     )
-    private data class HpData (
-        @JsonProperty("landing") val landing : HpLanding
+
+    private data class HpData(
+        @JsonProperty("landing") val landing: HpLanding
     )
-    private data class HpState (
-        @JsonProperty("data") val data : HpData
+
+    private data class HpState(
+        @JsonProperty("data") val data: HpData
     )
-    private data class HpHanimeHomePage (
-        @JsonProperty("state") val state : HpState
+
+    private data class HpHanimeHomePage(
+        @JsonProperty("state") val state: HpState
     )
 
     private fun getHentaiByIdFromList(id: Int, list: List<HpHentaiVideos>): HpHentaiVideos? {
@@ -98,7 +107,8 @@ class Hanime : MainAPI() {
         val requestGet = app.get("https://hanime.tv/")
         globalHeaders = requestGet.headers.toMap()
         val data = requestGet.text
-        val jsonText = Regex("""window\.__NUXT__=(.*?);</script>""").find(data)?.destructured?.component1()
+        val jsonText =
+            Regex("""window\.__NUXT__=(.*?);</script>""").find(data)?.destructured?.component1()
         val titles = ArrayList<String>()
         val items = ArrayList<HomePageList>()
 
@@ -107,23 +117,26 @@ class Hanime : MainAPI() {
                 items.add(HomePageList(
                     section.title,
                     (section.hentaiVideoIds.map {
-                    val hentai = getHentaiByIdFromList(it, json.state.data.landing.hentaiVideos)!!
-                    val title = getTitle(hentai.name)
-                    if (!titles.contains(title)) {
-                        titles.add(title)
-                        AnimeSearchResponse(
-                            title,
-                            "https://hanime.tv/videos/hentai/${hentai.slug}?id=${hentai.id}&title=${title}",
-                            this.name,
-                            globalTvType,
-                            hentai.coverUrl,
-                            null,
-                            EnumSet.of(DubStatus.Subbed),
-                        )
-                    } else {
-                        null
-                    }
-                }).filterNotNull()))
+                        val hentai =
+                            getHentaiByIdFromList(it, json.state.data.landing.hentaiVideos)!!
+                        val title = getTitle(hentai.name)
+                        if (!titles.contains(title)) {
+                            titles.add(title)
+                            AnimeSearchResponse(
+                                title,
+                                "https://hanime.tv/videos/hentai/${hentai.slug}?id=${hentai.id}&title=${title}",
+                                this.name,
+                                globalTvType,
+                                hentai.coverUrl,
+                                null,
+                                EnumSet.of(DubStatus.Subbed),
+                            )
+                        } else {
+                            null
+                        }
+                    }).filterNotNull()
+                )
+                )
             }
         }
 
@@ -131,14 +144,14 @@ class Hanime : MainAPI() {
         return HomePageResponse(items)
     }
 
-    data class HanimeSearchResult (
-        @JsonProperty("id") val id : Int,
-        @JsonProperty("name") val name : String,
-        @JsonProperty("slug") val slug : String,
-        @JsonProperty("titles") val titles : List<String>?,
-        @JsonProperty("cover_url") val coverUrl : String?,
-        @JsonProperty("tags") val tags : List<String>?,
-        @JsonProperty("released_at") val releasedAt : Int
+    data class HanimeSearchResult(
+        @JsonProperty("id") val id: Int,
+        @JsonProperty("name") val name: String,
+        @JsonProperty("slug") val slug: String,
+        @JsonProperty("titles") val titles: List<String>?,
+        @JsonProperty("cover_url") val coverUrl: String?,
+        @JsonProperty("tags") val tags: List<String>?,
+        @JsonProperty("released_at") val releasedAt: Int
     )
 
     override suspend fun search(query: String): ArrayList<SearchResponse> {
@@ -192,44 +205,44 @@ class Hanime : MainAPI() {
         return searchResults
     }
 
-    private data class HentaiTags (
-        @JsonProperty("text") val text : String
+    private data class HentaiTags(
+        @JsonProperty("text") val text: String
     )
 
-    private data class HentaiVideo (
-        @JsonProperty("name") val name : String,
-        @JsonProperty("description") val description : String,
-        @JsonProperty("cover_url") val coverUrl : String,
-        @JsonProperty("released_at_unix") val releasedAtUnix : Int,
-        @JsonProperty("hentai_tags") val hentaiTags : List<HentaiTags>
+    private data class HentaiVideo(
+        @JsonProperty("name") val name: String,
+        @JsonProperty("description") val description: String,
+        @JsonProperty("cover_url") val coverUrl: String,
+        @JsonProperty("released_at_unix") val releasedAtUnix: Int,
+        @JsonProperty("hentai_tags") val hentaiTags: List<HentaiTags>
     )
 
-    private data class HentaiFranchiseHentaiVideos (
-        @JsonProperty("id") val id : Int,
-        @JsonProperty("name") val name : String,
-        @JsonProperty("poster_url") val posterUrl : String,
-        @JsonProperty("released_at_unix") val releasedAtUnix : Int
+    private data class HentaiFranchiseHentaiVideos(
+        @JsonProperty("id") val id: Int,
+        @JsonProperty("name") val name: String,
+        @JsonProperty("poster_url") val posterUrl: String,
+        @JsonProperty("released_at_unix") val releasedAtUnix: Int
     )
 
-    private data class Streams (
-        @JsonProperty("height") val height : String,
-        @JsonProperty("filesize_mbs") val filesizeMbs : Int,
-        @JsonProperty("url") val url : String,
+    private data class Streams(
+        @JsonProperty("height") val height: String,
+        @JsonProperty("filesize_mbs") val filesizeMbs: Int,
+        @JsonProperty("url") val url: String,
     )
 
-    private data class Servers (
-        @JsonProperty("name") val name : String,
-        @JsonProperty("streams") val streams : List<Streams>
+    private data class Servers(
+        @JsonProperty("name") val name: String,
+        @JsonProperty("streams") val streams: List<Streams>
     )
 
-    private data class VideosManifest (
-        @JsonProperty("servers") val servers : List<Servers>
+    private data class VideosManifest(
+        @JsonProperty("servers") val servers: List<Servers>
     )
 
-    private data class HanimeEpisodeData (
-        @JsonProperty("hentai_video") val hentaiVideo : HentaiVideo,
-        @JsonProperty("hentai_tags") val hentaiTags : List<HentaiTags>,
-        @JsonProperty("hentai_franchise_hentai_videos") val hentaiFranchiseHentaiVideos : List<HentaiFranchiseHentaiVideos>,
+    private data class HanimeEpisodeData(
+        @JsonProperty("hentai_video") val hentaiVideo: HentaiVideo,
+        @JsonProperty("hentai_tags") val hentaiTags: List<HentaiTags>,
+        @JsonProperty("hentai_franchise_hentai_videos") val hentaiFranchiseHentaiVideos: List<HentaiFranchiseHentaiVideos>,
         @JsonProperty("videos_manifest") val videosManifest: VideosManifest,
     )
 
@@ -287,14 +300,16 @@ class Hanime : MainAPI() {
             server.streams.forEach {
                 if (it.url.isNotEmpty()) {
                     streams.add(
-                        ExtractorLink(
-                            source ="Hanime",
-                            name ="Hanime - ${server.name} - ${it.filesizeMbs}mb",
+                        newExtractorLink(
+                            source = "Hanime",
+                            name = "Hanime - ${server.name} - ${it.filesizeMbs}mb",
                             url = it.url,
-                            referer = "",
-                            quality = getQualityFromName(it.height),
-                            isM3u8 = true
-                        ))
+                            type = ExtractorLinkType.M3U8
+                        ) {
+                            referer = ""
+                            quality = getQualityFromName(it.height)
+                        }
+                    )
                 }
             }
         }

@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.getQualityFromName
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.select.Elements
 
 class HentaiHaven : MainAPI() {
@@ -14,7 +16,7 @@ class HentaiHaven : MainAPI() {
     override var mainUrl = "https://hentaihaven.xxx"
     override val supportedTypes = setOf(TvType.NSFW)
     override val hasDownloadSupport = false
-    override val hasMainPage= true
+    override val hasMainPage = true
     override val hasQuickSearch = false
 
     override suspend fun getMainPage(
@@ -29,16 +31,17 @@ class HentaiHaven : MainAPI() {
                 // Fetch row title
                 val title = it2?.select("div.home_slider_header")?.text() ?: "Unnamed Row"
                 // Fetch list of items and map
-                it2.select("div.page-content-listing div.item.vraven_item.badge-pos-1").let { inner ->
+                it2.select("div.page-content-listing div.item.vraven_item.badge-pos-1")
+                    .let { inner ->
 
-                    all.add(
-                        HomePageList(
-                            name = title,
-                            list = inner.getResults(this.name),
-                            isHorizontalImages = false
+                        all.add(
+                            HomePageList(
+                                name = title,
+                                list = inner.getResults(this.name),
+                                isHorizontalImages = false
+                            )
                         )
-                    )
-                }
+                    }
             }
         return HomePageResponse(all)
     }
@@ -153,14 +156,15 @@ class HentaiHaven : MainAPI() {
                             val label = m3src.label ?: ""
                             Log.i(name, "M3u8 link: $m3srcFile")
                             callback.invoke(
-                                ExtractorLink(
+                                newExtractorLink(
                                     name = "$name m3u8",
                                     source = "$name m3u8",
                                     url = m3srcFile,
-                                    referer = "$mainUrl/",
-                                    quality = getQualityFromName(label),
-                                    isM3u8 = true
-                                )
+                                    type = ExtractorLinkType.M3U8
+                                ) {
+                                    referer = "$mainUrl/"
+                                    quality = getQualityFromName(label)
+                                }
                             )
                         }
                     }
@@ -213,9 +217,11 @@ class HentaiHaven : MainAPI() {
     private data class ResponseJson(
         @JsonProperty("data") val data: ResponseData?
     )
+
     private data class ResponseData(
         @JsonProperty("sources") val sources: List<ResponseSources>? = listOf()
     )
+
     private data class ResponseSources(
         @JsonProperty("src") val src: String?,
         @JsonProperty("type") val type: String?,

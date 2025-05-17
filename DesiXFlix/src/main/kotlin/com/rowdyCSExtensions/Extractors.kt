@@ -3,7 +3,9 @@ package com.rowdyCSExtensions
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.utils.ExtractorApi
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.INFER_TYPE
 import com.lagradost.cloudstream3.utils.getQualityFromName
+import com.lagradost.cloudstream3.utils.newExtractorLink
 
 // class D0000dExtractor : DoodLaExtractor() {
 //     override var mainUrl = "https://d0000d.com"
@@ -24,24 +26,25 @@ class D0000dExtractor : ExtractorApi() {
 
         // (zUEJeL3mUN is random)
         val trueUrl =
-                if (res.toString().contains("cloudflarestorage")) res.toString()
-                else res.text + "zUEJeL3mUN?token=" + md5.substringAfterLast("/")
+            if (res.toString().contains("cloudflarestorage")) res.toString()
+            else res.text + "zUEJeL3mUN?token=" + md5.substringAfterLast("/")
 
         val quality =
-                Regex("\\d{3,4}p")
-                        .find(response0.substringAfter("<title>").substringBefore("</title>"))
-                        ?.groupValues
-                        ?.get(0)
+            Regex("\\d{3,4}p")
+                .find(response0.substringAfter("<title>").substringBefore("</title>"))
+                ?.groupValues
+                ?.get(0)
 
         return listOf(
-                ExtractorLink(
-                        this.name,
-                        this.name,
-                        trueUrl,
-                        mainUrl,
-                        getQualityFromName(quality),
-                        false
-                )
+            newExtractorLink(
+                this.name,
+                this.name,
+                trueUrl,
+                type = INFER_TYPE
+            ) {
+                this.referer = mainUrl
+                this.quality = getQualityFromName(quality)
+            }
         ) // links are valid for 8h
     }
 }

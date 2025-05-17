@@ -9,7 +9,9 @@ import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.network.CloudflareKiller
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.INFER_TYPE
 import com.lagradost.cloudstream3.utils.getQualityFromName
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import com.lagradost.nicehttp.NiceResponse
 
 class Vlxx : MainAPI() {
@@ -78,22 +80,22 @@ class Vlxx : MainAPI() {
         return getPage("$mainUrl/search/${query}/", mainUrl).document
             .select("#container .box .video-list")
             .mapNotNull {
-            val link = fixUrlNull(it.select("a").attr("href")) ?: return@mapNotNull null
-            val imgArticle = it.select(".video-image").attr("src")
-            val name = it.selectFirst(".video-name")?.text() ?: ""
-            val year = null
+                val link = fixUrlNull(it.select("a").attr("href")) ?: return@mapNotNull null
+                val imgArticle = it.select(".video-image").attr("src")
+                val name = it.selectFirst(".video-name")?.text() ?: ""
+                val year = null
 
-            newMovieSearchResponse(
-                name = name,
-                url = link,
-                type = globaltvType,
-            ) {
-                //this.apiName = apiName
-                this.posterUrl = imgArticle
-                this.year = year
-                this.posterHeaders = interceptor.getCookieHeaders(url).toMap()
-            }
-        }.distinctBy { it.url }
+                newMovieSearchResponse(
+                    name = name,
+                    url = link,
+                    type = globaltvType,
+                ) {
+                    //this.apiName = apiName
+                    this.posterUrl = imgArticle
+                    this.year = year
+                    this.posterHeaders = interceptor.getCookieHeaders(url).toMap()
+                }
+            }.distinctBy { it.url }
     }
 
     override suspend fun load(url: String): LoadResponse {
@@ -141,19 +143,21 @@ class Vlxx : MainAPI() {
         Log.i(DEV, "res ${res}")
 
         val json = getParamFromJS(res, "var opts = {\\r\\n\\t\\t\\t\\t\\t\\tsources:", "}]")
-        Log.i(DEV, "json ${json}")
+        Log.i(DEV, "json $json")
         json?.let {
             tryParseJson<List<Sources?>>(it)?.forEach { vidlink ->
                 vidlink?.file?.let { file ->
                     callback.invoke(
-                        ExtractorLink(
+                        newExtractorLink(
                             source = file,
                             name = this.name,
                             url = file,
-                            referer = data,
-                            quality = getQualityFromName(vidlink.label),
-                            isM3u8 = file.endsWith("m3u8")
+                            type = INFER_TYPE,
                         )
+                        {
+                            this.referer = data
+                            this.quality = getQualityFromName(vidlink.label)
+                        }
                     )
                 }
             }

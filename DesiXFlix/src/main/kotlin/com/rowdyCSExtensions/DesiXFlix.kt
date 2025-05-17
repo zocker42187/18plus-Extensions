@@ -81,7 +81,7 @@ class DesiXFlix(val plugin: DesiXFlixPlugin) :
             }
             data.contains("hotxseries") -> {
                 var serverName = "HotxSeries"
-                callback.invoke(ExtractorLink(serverName, serverName, data, "", 0))
+                callback.invoke(newExtractorLink(serverName, serverName, data))
             }
             else -> loadExtractor(data, subtitleCallback, callback)
         }

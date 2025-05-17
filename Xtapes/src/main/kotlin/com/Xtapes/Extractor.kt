@@ -12,6 +12,7 @@ import com.lagradost.cloudstream3.utils.INFER_TYPE
 import com.lagradost.cloudstream3.utils.M3u8Helper
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.getQualityFromName
+import com.lagradost.cloudstream3.utils.newExtractorLink
 
 
 class Stream : Filesim() {
@@ -28,14 +29,15 @@ open class VID : ExtractorApi() {
         val response = app.get(url).document.toString()
         val link =response.substringAfter("src: '").substringBefore("',")
         return listOf(
-            ExtractorLink(
+            newExtractorLink(
                 this.name,
                 this.name,
                 link,
-                referer ?: "",
-                Qualities.Unknown.value,
                 type = INFER_TYPE
             )
+            {
+                this.referer = referer ?: ""
+            }
         )
     }
 }

@@ -87,13 +87,15 @@ class YesPornPlease : MainAPI() {
             val doc = app.get(link).document
             val source = doc.selectFirst("video > source")!!.attr("src")
             callback.invoke(
-                ExtractorLink(
+                newExtractorLink(
                     this.name,
                     this.name,
                     source,
-                    referer = mainUrl,
-                    quality = Qualities.Unknown.value,
+                    INFER_TYPE
                 )
+                {
+                    referer = mainUrl
+                }
             )
         }
 

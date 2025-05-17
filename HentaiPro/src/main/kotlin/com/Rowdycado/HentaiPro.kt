@@ -4,8 +4,10 @@ import android.util.Log
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.INFER_TYPE
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.SubtitleHelper
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -97,18 +99,19 @@ class HentaiPro : MainAPI() {
         val res = app.get(data).document
         val iframe = res.selectFirst("div.videoplayer-container > iframe")?.attr("src") ?: ""
         val playerurl = extractplayer(iframe) ?: ""
-        val sourceurl = extractsource(playerurl) ?:""
-        val subtitle = extractsubtitles(playerurl) ?:""
+        val sourceurl = extractsource(playerurl) ?: ""
+        val subtitle = extractsubtitles(playerurl) ?: ""
 
         callback.invoke(
-        ExtractorLink(
-            source = this.name,
-            name = this.name,
-            url = sourceurl,
-            referer = "",
-            quality = Qualities.Unknown.value,
-            isM3u8 = false
-        )
+            newExtractorLink(
+                source = this.name,
+                name = this.name,
+                url = sourceurl,
+                type = INFER_TYPE
+            ) {
+                referer = ""
+                quality = Qualities.Unknown.value
+            }
 
         )
         subtitleCallback.invoke(

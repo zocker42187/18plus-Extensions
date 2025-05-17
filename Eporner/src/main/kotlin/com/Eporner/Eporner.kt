@@ -7,32 +7,32 @@ import com.lagradost.cloudstream3.utils.*
 import org.json.JSONObject
 
 class Eporner : MainAPI() {
-    override var mainUrl              = "https://www.eporner.com"
-    override var name                 = "Eporner"
-    override val hasMainPage          = true
-    override var lang                 = "en"
-    override val hasDownloadSupport   = true
+    override var mainUrl = "https://www.eporner.com"
+    override var name = "Eporner"
+    override val hasMainPage = true
+    override var lang = "en"
+    override val hasDownloadSupport = true
     override val hasChromecastSupport = true
-    override val supportedTypes       = setOf(TvType.NSFW)
-    override val vpnStatus            = VPNStatus.MightBeNeeded
+    override val supportedTypes = setOf(TvType.NSFW)
+    override val vpnStatus = VPNStatus.MightBeNeeded
 
     override val mainPage = mainPageOf(
-            "best-videos" to "Best Videos",
-            "top-rated" to "Top Rated",
-            "most-viewed" to "Most Viewed",
-            "cat/milf" to "Milf",
-            "cat/japanese" to "Japanese",
-            "cat/hd-1080p" to "1080 Porn",
-            "cat/4k-porn" to "4K Porn"
+        "best-videos" to "Best Videos",
+        "top-rated" to "Top Rated",
+        "most-viewed" to "Most Viewed",
+        "cat/milf" to "Milf",
+        "cat/japanese" to "Japanese",
+        "cat/hd-1080p" to "1080 Porn",
+        "cat/4k-porn" to "4K Porn"
 
-        )
+    )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val document = app.get("$mainUrl/${request.data}/$page/").document
         val home = document.select("div.mb.hdy").mapNotNull { it.toSearchResult() }
 
         return newHomePageResponse(
-            list    = HomePageList(
+            list = HomePageList(
                 name = request.name,
                 list = home,
                 isHorizontalImages = true
@@ -76,10 +76,12 @@ class Eporner : MainAPI() {
     override suspend fun load(url: String): LoadResponse {
         val document = app.get(url).document
 
-        val title = document.selectFirst("meta[property=og:title]")?.attr("content")?.trim().toString()
+        val title =
+            document.selectFirst("meta[property=og:title]")?.attr("content")?.trim().toString()
         val poster = fixUrlNull(document.selectFirst("[property='og:image']")?.attr("content"))
-        val description = document.selectFirst("meta[property=og:description]")?.attr("content")?.trim()
-    
+        val description =
+            document.selectFirst("meta[property=og:description]")?.attr("content")?.trim()
+
 
         return newMovieLoadResponse(title, url, TvType.NSFW, url) {
             this.posterUrl = poster
@@ -87,7 +89,12 @@ class Eporner : MainAPI() {
         }
     }
 
-    override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
+    override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
         val response = app.get(
             data, interceptor = WebViewResolver(Regex("""https://www\.eporner\.com/xhr/video"""))
         )
@@ -103,20 +110,22 @@ class Eporner : MainAPI() {
             val src = sourceObject.getString("src")
             val labelShort = sourceObject.getString("labelShort") ?: ""
             callback.invoke(
-                ExtractorLink(
+                newExtractorLink(
                     source = name,
                     name = name,
                     url = src,
-                    referer = "",
-                    getIndexQuality(labelShort)
-                )
+                    type = INFER_TYPE
+                ) {
+                    this.referer = ""
+                    this.quality = getIndexQuality(labelShort)
+                }
             )
         }
         return true
     }
 
     private fun getIndexQuality(str: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(str ?: "") ?. groupValues ?. getOrNull(1) ?. toIntOrNull()
+        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
             ?: Qualities.Unknown.value
     }
 }

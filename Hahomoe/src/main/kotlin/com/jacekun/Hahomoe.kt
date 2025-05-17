@@ -6,6 +6,7 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.mvvm.logError
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import java.text.SimpleDateFormat
 import java.util.*
 import khttp.structures.cookie.CookieJar
@@ -27,6 +28,7 @@ class Hahomoe : MainAPI() {
              */
         }
     }
+
     private val globalTvType = TvType.NSFW
     override var mainUrl = "https://haho.moe"
     override var name = "Haho moe"
@@ -268,18 +270,20 @@ class Hahomoe : MainAPI() {
             val release = source.text().replace("/", "").trim()
             val sourceSoup = app.get(
                 "$mainUrl/embed?v=${source.attr("href").split("v=")[1].split("&")[0]}",
-                headers=mapOf("Referer" to data)
+                headers = mapOf("Referer" to data)
             ).document
 
             for (quality in sourceSoup.select("video#player > source")) {
                 sources.add(
-                    ExtractorLink(
+                    newExtractorLink(
                         this.name,
                         "${this.name} $release - " + quality.attr("title"),
-                        fixUrl(quality.attr("src")),
-                        this.mainUrl,
-                        getQualityFromName(quality.attr("title"))
+                        fixUrl(quality.attr("src"))
                     )
+                    {
+                        this.referer = mainUrl
+                        getQualityFromName(quality.attr("title"))
+                    }
                 )
             }
         }

@@ -80,13 +80,19 @@ class Whoreshub : MainAPI() {
         for(link in links) {
             if(link.isNotEmpty()) {
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         this.name,
                         this.name,
                         link,
-                        referer = "",
-                        quality = Regex("""_(1080|720|480|360)p\.mp4""").find(link) ?. groupValues ?. getOrNull(1) ?. toIntOrNull() ?: Qualities.Unknown.value,
+                        INFER_TYPE
                     )
+                    {
+                        this.referer = ""
+                        this.quality =
+                            Regex("""_(1080|720|480|360)p\.mp4""").find(link)?.groupValues?.getOrNull(
+                                1
+                            )?.toIntOrNull() ?: Qualities.Unknown.value
+                    }
                 )
             }
         }

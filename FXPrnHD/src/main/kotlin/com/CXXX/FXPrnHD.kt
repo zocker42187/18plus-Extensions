@@ -83,7 +83,8 @@ class Fxprnhd : MainAPI() {
             fixUrlNull(document.selectFirst("meta[property=og:image]")?.attr("content").toString())
         val tags = document.select("div.tags-list > i").map { it.text() }
         val description = document.select("div#rmjs-1 p:nth-child(1) > br").text().trim()
-        val actors = document.select("div#rmjs-1 p:nth-child(1) a:nth-child(2) > strong").map { it.text() }
+        val actors =
+            document.select("div#rmjs-1 p:nth-child(1) a:nth-child(2) > strong").map { it.text() }
 
         val recommendations =
             document.select("div.videos-list > article").mapNotNull {
@@ -111,17 +112,14 @@ class Fxprnhd : MainAPI() {
         if (iframe.startsWith(mainUrl)) {
             val video = app.get(iframe, referer = data).document.select("video source").attr("src")
             callback.invoke(
-                ExtractorLink(
+                newExtractorLink(
                     this.name,
                     this.name,
                     video,
-                    "$mainUrl/",
-                    Qualities.Unknown.value,
-                    INFER_TYPE,
-                    headers = mapOf(
-                        "Range" to "bytes=0-",
-                    ),
-                )
+                    INFER_TYPE
+                ) {
+                    this.referer = "$mainUrl/"
+                }
             )
         } else {
             loadExtractor(iframe, "$mainUrl/", subtitleCallback, callback)

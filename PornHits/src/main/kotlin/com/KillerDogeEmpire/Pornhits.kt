@@ -17,7 +17,9 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.json.JSONObject
 import org.jsoup.nodes.Element
 
@@ -150,18 +152,19 @@ class Pornhits : MainAPI() {
             var url = customBase64Decoder(video.getString("video_url"))
             if (isVHQ) {
                 url = "$url&f=video.m3u8"
-                isM3u8 = true
                 quality = Qualities.Unknown.value
             }
             externalLinkList.add(
-                ExtractorLink(
+                newExtractorLink(
                     this.name,
                     this.name,
                     fixUrl(url),
-                    referer = mainUrl,
-                    quality = quality,
-                    isM3u8 = isM3u8
+                    ExtractorLinkType.M3U8
                 )
+                {
+                    referer = mainUrl
+                    this.quality = quality
+                }
             )
             if (isVHQ) break
         }

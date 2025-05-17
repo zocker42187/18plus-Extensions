@@ -15,25 +15,25 @@ import org.json.JSONObject
 
 class CornHubProvider : MainAPI() {
     private val globalTvType = TvType.NSFW
-    override var mainUrl              = "https://www.pornhub.com"
-    override var name                 = "CornHub"
-    override val hasMainPage          = true
-    override var lang                 = "en"
-    override val hasQuickSearch       = false
-    override val hasDownloadSupport   = true
+    override var mainUrl = "https://www.pornhub.com"
+    override var name = "CornHub"
+    override val hasMainPage = true
+    override var lang = "en"
+    override val hasQuickSearch = false
+    override val hasDownloadSupport = true
     override val hasChromecastSupport = true
-    override val supportedTypes       = setOf(TvType.NSFW)
-    override val vpnStatus            = VPNStatus.MightBeNeeded
+    override val supportedTypes = setOf(TvType.NSFW)
+    override val vpnStatus = VPNStatus.MightBeNeeded
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/video?o=mr&hd=1&page="           to "Recently Featured",
-        "${mainUrl}/video?o=tr&t=w&hd=1&page="       to "Top Rated",
-        "${mainUrl}/video?o=mv&t=w&hd=1&page="       to "Most Viewed",
-        "${mainUrl}/video?o=ht&t=w&hd=1&page="       to "Hottest",
+        "${mainUrl}/video?o=mr&hd=1&page=" to "Recently Featured",
+        "${mainUrl}/video?o=tr&t=w&hd=1&page=" to "Top Rated",
+        "${mainUrl}/video?o=mv&t=w&hd=1&page=" to "Most Viewed",
+        "${mainUrl}/video?o=ht&t=w&hd=1&page=" to "Hottest",
         "${mainUrl}/video?p=professional&hd=1&page=" to "Professional",
-        "${mainUrl}/video?o=lg&hd=1&page="           to "Longest",
-        "${mainUrl}/video?p=homemade&hd=1&page="     to "Homemade",
-        "${mainUrl}/video?o=cm&t=w&hd=1&page="       to "Newest",
+        "${mainUrl}/video?o=lg&hd=1&page=" to "Longest",
+        "${mainUrl}/video?p=homemade&hd=1&page=" to "Homemade",
+        "${mainUrl}/video?o=cm&t=w&hd=1&page=" to "Newest",
     )
     private val cookies = mapOf(Pair("hasVisited", "1"), Pair("accessAgeDisclaimerPH", "1"))
 
@@ -161,15 +161,18 @@ class CornHubProvider : MainAPI() {
                         videoUrl
                     ), true
                 ).apmap { stream ->
-                    extlinkList.add(ExtractorLink(
-                        source = name,
-                        name = "${this.name}",
-                        url = stream.streamUrl,
-                        referer = mainUrl,
-                        quality = Regex("(\\d+)").find(quality ?: "")?.groupValues?.get(1)
-                            .let { getQualityFromName(it) },
-                        isM3u8 = true
-                    ))
+                    extlinkList.add(
+                        newExtractorLink(
+                            source = name,
+                            name = this.name,
+                            url = stream.streamUrl,
+                            type = ExtractorLinkType.M3U8
+                        ) {
+                            referer = mainUrl
+                            this.quality = Regex("(\\d+)").find(quality ?: "")?.groupValues?.get(1)
+                                .let { getQualityFromName(it) }
+                        }
+                    )
                 }
                 extlinkList.forEach(callback)
             }

@@ -93,14 +93,15 @@ class Javguru : MainAPI() {
              if (link.contains(".m3u"))
              {
                  callback.invoke(
-                     ExtractorLink(
+                     newExtractorLink(
                          source = name,
                          name=name,
                          url = link,
-                         referer = "",
-                         quality = getQualityFromName(""),
                          type = INFER_TYPE
                      )
+                     {
+                         this.referer = ""
+                     }
                  )
              }
              else{
