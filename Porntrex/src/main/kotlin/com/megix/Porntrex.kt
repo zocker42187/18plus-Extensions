@@ -17,7 +17,9 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.getQualityFromName
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.json.JSONObject
 import org.jsoup.internal.StringUtil
 import org.jsoup.nodes.Element
@@ -55,7 +57,7 @@ class Porntrex : MainAPI() {
         if (request.data.contains("mode=async")) {
             url = "$mainUrl/${request.data}${page}"
         }
-        val document = app.get(url).document
+        val document = app.get(url, cookies = mapOf("Cookie" to "confirmed=true")).document
         val home =
                 document.select("div.video-list div.video-item")
                         .mapNotNull {
@@ -164,15 +166,15 @@ class Porntrex : MainAPI() {
                 continue
             }
             extlinkList.add(
-                    ExtractorLink(
-                            name,
-                            name,
-                            fixUrl(url),
-                            referer = "",
-                            quality =
-                            Regex("(\\d+.)").find(quality)?.groupValues?.get(1)
-                                    .let { getQualityFromName(it) }
-                    )
+                    newExtractorLink(
+                        name,
+                        name,
+                        fixUrl(url)){
+                        val q = Regex("(\\d+.)").find(quality)?.groupValues?.get(1)
+                        q?.let { quality = it }
+                        type = ExtractorLinkType.VIDEO
+                    }
+
             )
         }
         extlinkList.forEach(callback)
