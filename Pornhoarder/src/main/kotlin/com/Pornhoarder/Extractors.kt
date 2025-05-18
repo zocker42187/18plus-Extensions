@@ -1,7 +1,6 @@
-package com.Pornhoarder
+package com.CXXX
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.lagradost.cloudstream3.APIHolder.capitalize
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
@@ -11,7 +10,14 @@ import com.lagradost.cloudstream3.utils.INFER_TYPE
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
-class PornhoarderExtractor(
+class LuluStream : BigWarp(
+    name = "Lulustream"
+) {
+    override val name: String = "Lulustream"
+    override val mainUrl: String = "https://lulustream.com"
+}
+
+open class BigWarp(
     override val name: String = "Big Warp",
     override val mainUrl: String = "https://bigwarp.io",
     override val requiresReferer: Boolean = false
@@ -30,11 +36,10 @@ class PornhoarderExtractor(
         val src = Regex("(?<=sources: ).*(?=,)").find(script)?.value ?: return
         val parsedSources = parseJson<List<Source>>(src)
         parsedSources.map {
-            val sourceName = url.substringAfter("//").substringBefore(".").capitalize()
             callback(
                 newExtractorLink(
-                    sourceName,
-                    sourceName,
+                    this.name,
+                    this.name,
                     it.src,
                     type = INFER_TYPE
                 ) {
