@@ -11,7 +11,7 @@ import com.lagradost.cloudstream3.utils.INFER_TYPE
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
-class Pornhoarder(
+class PornhoarderExtractor(
     override val name: String = "Big Warp",
     override val mainUrl: String = "https://bigwarp.io",
     override val requiresReferer: Boolean = false
