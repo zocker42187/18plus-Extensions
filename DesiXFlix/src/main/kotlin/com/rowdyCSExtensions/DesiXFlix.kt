@@ -6,11 +6,11 @@ import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.utils.*
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Document
 
-class DesiXFlix(val plugin: DesiXFlixPlugin) :
-        MainAPI() { // all providers must be an intstance of MainAPI
-    override var mainUrl = "https://desixflix.com"
+class DesiXFlix(val plugin: DesiXFlixPlugin) : MainAPI() { // all providers must be an intstance of MainAPI
+    override var mainUrl = "https://desixflix.live"
     override var name = "DesiXFlix"
     override val supportedTypes = setOf(TvType.NSFW)
 
@@ -22,7 +22,7 @@ class DesiXFlix(val plugin: DesiXFlixPlugin) :
     // this function gets called when you search for something
     override suspend fun search(query: String): List<SearchResponse> {
         val url = "$mainUrl/?s=$query"
-        val res = app.get(url)
+        val res = app.get(url, )
         return searchResponseBuilder(res.document)
     }
 
@@ -39,10 +39,10 @@ class DesiXFlix(val plugin: DesiXFlixPlugin) :
                     "$mainUrl/hotslive/page/" to "Hots Live",
             )
 
-    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
+    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse? {
         val url = request.data + page
-        val res = app.get(url)
-        if (res.code != 200) throw ErrorLoadingException("Could not load data")
+        val res = app.get(url, headers = mapOf("Host" to mainUrl.toHttpUrl().host))
+        if (res.code != 200) return null
         val home = searchResponseBuilder(res.document)
 
         return newHomePageResponse(HomePageList(request.name, home, true), true)
@@ -75,7 +75,12 @@ class DesiXFlix(val plugin: DesiXFlixPlugin) :
             callback: (ExtractorLink) -> Unit
     ): Boolean {
         Log.d("Rushi", data)
-        when {
+        val headers = mapOf("Host" to data.toHttpUrl().host)
+        val resp = app.get(data, headers = headers).document
+        val script = resp.select("script").find { it.data().contains("jwplayer(\"vplayer\").setup") }?.data() ?: return false
+        val url = Regex("(?<=sources: \\[\\{file:\").*(?=\")").find(script)?.value ?: return false
+        callback.invoke(newExtractorLink(this.name, this.name, url))
+        /*when {
             data.contains("d0000d") -> {
                 D0000dExtractor().getUrl(data, data)?.forEach { link -> callback.invoke(link) }
             }
@@ -84,7 +89,7 @@ class DesiXFlix(val plugin: DesiXFlixPlugin) :
                 callback.invoke(newExtractorLink(serverName, serverName, data))
             }
             else -> loadExtractor(data, subtitleCallback, callback)
-        }
+        }*/
         return true
     }
 
