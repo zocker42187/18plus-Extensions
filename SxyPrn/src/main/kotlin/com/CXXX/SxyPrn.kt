@@ -1,11 +1,14 @@
 package com.CXXX
 
+import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.AppUtils
+import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.INFER_TYPE
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.loadExtractor
 import com.lagradost.cloudstream3.utils.newExtractorLink
 
 class SxyPrn : MainAPI() {
@@ -40,8 +43,8 @@ class SxyPrn : MainAPI() {
             app.get(request.data.replace(".html", ".html/$pageStr")).document
         }
         val home = document.select("div.main_content div.post_el_small").mapNotNull {
-                it.toSearchResult()
-            }
+            it.toSearchResult()
+        }
         return newHomePageResponse(
             list = HomePageList(
                 name = request.name, list = home, isHorizontalImages = true
@@ -69,8 +72,8 @@ class SxyPrn : MainAPI() {
                 "$mainUrl/${query.replace(" ", "-")}.html?page=${i * 30}"
             ).document
             val results = document.select("div.main_content div.post_el_small").mapNotNull {
-                    it.toSearchResult()
-                }
+                it.toSearchResult()
+            }
             if (!searchResponse.containsAll(results)) {
                 searchResponse.addAll(results)
             } else {
@@ -114,36 +117,18 @@ class SxyPrn : MainAPI() {
         return sut
     }
 
-   override suspend fun loadLinks(
+    override suspend fun loadLinks(
         data: String,
         isCasting: Boolean,
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val document = app.get(data).document
-        val parsed = AppUtils.parseJson<Map<String, String>>(
-            document.select("span.vidsnfo").attr("data-vnfo")
-        )
-        parsed[parsed.keys.toList()[0]]
-        var url = parsed[parsed.keys.toList()[0]].toString()
-
-        var tmp = url.split("/").toMutableList()
-        tmp[1] += "8"
-        tmp = updateUrl(tmp)
-
-        url = fixUrl(tmp.joinToString("/"))
-
-        callback.invoke(
-            newExtractorLink(
-                this.name,
-                this.name,
-                url,
-                INFER_TYPE
-            )
-            {
-                referer = ""
-            }
-        )
+        val a = document.select("a.post_time").first()?.attr("title") ?: return false
+        val links = a.substringAfterLast("#").substringAfter(" ").split(" ")
+        links.map {
+            loadExtractor(it, null, subtitleCallback, callback)
+        }
         return true
     }
 }
