@@ -1,5 +1,7 @@
 package com.PornhoarderPlugin
 
+import com.Pornhoarder.Pornhoarder
+import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
@@ -132,7 +134,11 @@ class PornhoarderPlugin : MainAPI() {
                 .build()
             val doc1 = app.post(item,requestBody = requestBody).document
             val videoHosterUrl = doc1.select("iframe").attr("src")
-            loadExtractor(videoHosterUrl,subtitleCallback,callback)
+            if (videoHosterUrl.contains("bigwarp") || videoHosterUrl.contains("luluvdo")){
+                Pornhoarder().getUrl(videoHosterUrl, null, subtitleCallback, callback)
+            }else {
+                loadExtractor(videoHosterUrl, subtitleCallback, callback)
+            }
         }
         return true
     }

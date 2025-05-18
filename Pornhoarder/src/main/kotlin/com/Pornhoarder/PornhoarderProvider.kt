@@ -10,7 +10,5 @@ import com.lagradost.cloudstream3.extractors.Wishonly
 class PornhoarderProvider: Plugin() {
     override fun load(context: Context) {
         registerMainAPI(PornhoarderPlugin())
-        registerExtractorAPI(StreamTape())
-        registerExtractorAPI(Wishonly())
     }
 }
