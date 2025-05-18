@@ -17,12 +17,13 @@ import java.util.Base64
 import android.util.Log
 import com.lagradost.cloudstream3.extractors.MixDrop
 import com.lagradost.cloudstream3.utils.JsUnpacker
+import com.lagradost.cloudstream3.utils.newExtractorLink
 
 class DoodPmExtractor : DoodLaExtractor() {
     override var mainUrl = "https://dood.pm"
 }
 
-class MixDropAG : MixDrop(){
+class MixDropAG : MixDrop() {
     override var mainUrl = "https://mixdrop.ag"
 }
 
@@ -32,19 +33,21 @@ open class Lulustream : ExtractorApi() {
     override val requiresReferer = true
 
     override suspend fun getUrl(url: String, referer: String?): List<ExtractorLink>? {
-        val response = app.get(url,referer=mainUrl).document
-        val extractedpack =response.selectFirst("script:containsData(function(p,a,c,k,e,d))")?.data().toString()
+        val response = app.get(url, referer = mainUrl).document
+        val extractedpack =
+            response.selectFirst("script:containsData(function(p,a,c,k,e,d))")?.data().toString()
         JsUnpacker(extractedpack).unpack()?.let { unPacked ->
             Regex("sources:\\[\\{file:\"(.*?)\"").find(unPacked)?.groupValues?.get(1)?.let { link ->
                 return listOf(
-                    ExtractorLink(
+                    newExtractorLink(
                         this.name,
                         this.name,
                         link,
-                        referer ?: "",
-                        Qualities.Unknown.value,
                         type = INFER_TYPE
                     )
+                    {
+                        this.referer = referer ?: ""
+                    }
                 )
             }
         }
@@ -71,14 +74,14 @@ open class Vidguardto : ExtractorApi() {
             val watchlink = sigDecode(jsonStr2.stream)
 
             callback.invoke(
-                ExtractorLink(
+                newExtractorLink(
                     this.name,
                     name,
                     watchlink,
-                    this.mainUrl,
-                    Qualities.Unknown.value,
                     INFER_TYPE
-                )
+                ) {
+                    this.referer = mainUrl
+                }
             )
         }
     }
@@ -121,7 +124,8 @@ open class Vidguardto : ExtractorApi() {
             rhino.evaluateString(scope, hideMyHtmlContent, "JavaScript", 1, null)
             val svgObject = scope.get("svg", scope)
             result = if (svgObject is NativeObject) {
-                NativeJSON.stringify(Context.getCurrentContext(), scope, svgObject, null, null).toString()
+                NativeJSON.stringify(Context.getCurrentContext(), scope, svgObject, null, null)
+                    .toString()
             } else {
                 Context.toString(svgObject)
             }

@@ -18,21 +18,20 @@ open class Stbturbo : ExtractorApi() {
             this.document.let { document ->
                 val finalLink = document.select("#video_player").attr("data-hash")
                 return listOf(
-                    ExtractorLink(
+                    newExtractorLink(
                         name,
                         name,
                         httpsify(finalLink),
-                        url,
-                        Qualities.Unknown.value,
-                        isM3u8 = true
-                    )
+                        ExtractorLinkType.M3U8
+                    ) {
+                        this.referer = url
+                    }
                 )
             }
         }
         return null
     }
-    }
-
+}
 
 
 class Turbovid : Stbturbo() {
