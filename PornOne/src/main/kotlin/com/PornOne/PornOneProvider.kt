@@ -47,7 +47,7 @@ class PornOneProvider : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        var document = app.get("$mainUrl${request.data}$page", timeout = 30).document
+        val document = app.get("$mainUrl${request.data}$page", timeout = 30).document
         val responseList = document.select(".popbop.vidLinkFX").mapNotNull { it.toSearchResult() }
         return newHomePageResponse(
             HomePageList(
@@ -60,11 +60,11 @@ class PornOneProvider : MainAPI() {
     }
 
     private fun Element.toSearchResult(): SearchResponse {
-        val title = this.select(".imgvideo.w-full").attr("alt")
+        val title = this.select(".videotitle").text()
         val href = this.attr("href")
-        var posterUrl = this.select(".imgvideo.w-full").attr("data-src")
-        if (posterUrl.isNullOrBlank()) {
-            posterUrl = this.select(".imgvideo.w-full").attr("src")
+        var posterUrl = this.select(".imgvideo").attr("src")
+        if (posterUrl.isBlank()) {
+            posterUrl = this.select(".imgvideo").attr("data-src")
         }
         return newMovieSearchResponse(title, href, TvType.Movie) {
             this.posterUrl = posterUrl
