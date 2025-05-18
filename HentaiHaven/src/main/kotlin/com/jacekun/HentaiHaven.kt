@@ -29,7 +29,7 @@ class HentaiHaven : MainAPI() {
         doc.getElementsByTag("body").select("div.c-tabs-item")
             .select("div.vraven_home_slider").forEach { it2 ->
                 // Fetch row title
-                val title = it2?.select("div.home_slider_header")?.text() ?: "Unnamed Row"
+                val title = it2.select("div.home_slider_header").text()
                 // Fetch list of items and map
                 it2.select("div.page-content-listing div.item.vraven_item.badge-pos-1")
                     .let { inner ->
@@ -37,20 +37,20 @@ class HentaiHaven : MainAPI() {
                         all.add(
                             HomePageList(
                                 name = title,
-                                list = inner.getResults(this.name),
+                                list = inner.getResults(),
                                 isHorizontalImages = false
                             )
                         )
                     }
             }
-        return HomePageResponse(all)
+        return newHomePageResponse(all)
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
         val searchUrl = "${mainUrl}/?s=${query}&post_type=wp-manga"
         return app.get(searchUrl).document
             .select("div.c-tabs-item div.row.c-tabs-item__content")
-            .getResults(this.name)
+            .getResults()
     }
 
     override suspend fun load(url: String): LoadResponse {
@@ -60,8 +60,7 @@ class HentaiHaven : MainAPI() {
         val poster = doc.select("meta[property=og:image]")
             .firstOrNull()?.attr("content")
         val title = doc.select("meta[name=title]")
-            .firstOrNull()?.attr("content")
-            ?.toString() ?: ""
+            .firstOrNull()?.attr("content") ?: ""
         val descript = doc.select("div.description-summary").text()
 
         val body = doc.getElementsByTag("body")
@@ -73,32 +72,31 @@ class HentaiHaven : MainAPI() {
             ?.text()?.trim()?.takeLast(4)?.toIntOrNull()
 
         val episodeList = episodes?.mapNotNull {
-            val innerA = it?.selectFirst("a") ?: return@mapNotNull null
-            val eplink = innerA.attr("href") ?: return@mapNotNull null
+            val innerA = it.selectFirst("a") ?: return@mapNotNull null
+            val eplink = innerA.attr("href")
             val epCount = innerA.text().trim().filter { a -> a.isDigit() }.toIntOrNull()
             val imageEl = innerA.selectFirst("img")
             val epPoster = imageEl?.attr("src") ?: imageEl?.attr("data-src")
-            Episode(
-                name = innerA.text(),
-                data = eplink,
-                posterUrl = epPoster,
-                episode = epCount,
-            )
+            newEpisode(data = eplink)
+            {
+                name = innerA.text()
+                posterUrl = epPoster
+                episode = epCount
+            }
         } ?: listOf()
 
         //Log.i(this.name, "Result => (id) ${id}")
-        return AnimeLoadResponse(
+        return newAnimeLoadResponse(
             name = title,
             url = url,
-            apiName = this.name,
             type = globalTvType,
-            posterUrl = poster,
-            year = year,
-            plot = descript,
-            episodes = mutableMapOf(
-                Pair(DubStatus.Subbed, episodeList.reversed())
-            )
-        )
+        ) {
+            addEpisodes(DubStatus.Subbed, episodeList.reversed())
+            posterUrl = poster
+            this.year = year
+            plot = descript
+        }
+
     }
 
     override suspend fun loadLinks(
@@ -177,7 +175,7 @@ class HentaiHaven : MainAPI() {
         return true
     }
 
-    private fun Elements?.getResults(apiName: String): List<AnimeSearchResponse> {
+    private fun Elements?.getResults(): List<AnimeSearchResponse> {
         return this?.mapNotNull {
             val innerDiv = it.select("div").firstOrNull()
             val firstA = innerDiv?.selectFirst("a")
@@ -187,10 +185,7 @@ class HentaiHaven : MainAPI() {
                 ?.attr("title")?.takeLast(4)?.toIntOrNull()
 
             val imageDiv = firstA?.selectFirst("img")
-            var image = imageDiv?.attr("src")
-            if (image.isNullOrBlank()) {
-                image = imageDiv?.attr("data-src")
-            }
+            val image = imageDiv?.attr("data-src")
 
             val latestEp = innerDiv?.selectFirst("div.list-chapter")
                 ?.selectFirst("div.chapter-item")
@@ -202,15 +197,15 @@ class HentaiHaven : MainAPI() {
                 Pair(DubStatus.Subbed, latestEp)
             )
 
-            AnimeSearchResponse(
+            newAnimeSearchResponse(
                 name = name,
                 url = link,
-                apiName = apiName,
                 type = globalTvType,
-                posterUrl = image,
-                year = year,
+            ) {
+                posterUrl = image
+                this.year = year
                 episodes = dubStatus
-            )
+            }
         } ?: listOf()
     }
 
