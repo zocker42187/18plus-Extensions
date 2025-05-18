@@ -1,5 +1,6 @@
 package com.CXXX
 
+import com.lagradost.api.Log
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -147,7 +148,7 @@ class Perverzija : MainAPI() {
         val maxPages = if (query.contains(" ")) 6 else 20
         for (i in 1..maxPages) {
             val url = if (query.contains(" ")) {
-            "$mainUrl/page/$i/?s=${query.replace(" ", "+")}&orderby=date"
+                "$mainUrl/page/$i/?s=${query.replace(" ", "+")}&orderby=date"
             } else {
                 "$mainUrl/tag/$query/page/$i/"
             }
@@ -201,6 +202,7 @@ class Perverzija : MainAPI() {
 
         val iframeUrl = document.select("div#player-embed iframe").attr("src")
 
-        return loadExtractor(iframeUrl, subtitleCallback, callback)
+         Xtremestream().getUrl(iframeUrl, null)?.map(callback)
+        return true
     }
 }
