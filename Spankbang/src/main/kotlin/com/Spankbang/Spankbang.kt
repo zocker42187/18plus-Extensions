@@ -77,9 +77,9 @@ class Spankbang : MainAPI() {
         val searchResponse = mutableListOf<SearchResponse>()
 
         for (i in 1..5) {
-            val document = app.get("${mainUrl}/s/$query/$i/?o=all").document
+            val document = app.get("${mainUrl}/s/$query").document
 
-            val results = document.select("div.video-list-with-ads > div.video-item")
+            val results = document.select("div[data-testid=\"video-item\"]")
                 .mapNotNull { it.toSearchResult() }
 
             if (!searchResponse.containsAll(results)) {
