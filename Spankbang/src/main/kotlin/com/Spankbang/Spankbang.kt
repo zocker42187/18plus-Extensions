@@ -4,8 +4,10 @@ import android.util.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
+import org.json.JSONException
+import org.json.JSONObject
 
-class spankbang : MainAPI() {
+class Spankbang : MainAPI() {
     override var mainUrl = "https://spankbang.com"
     override var name = "Spankbang"
     override val hasMainPage = true
@@ -17,21 +19,35 @@ class spankbang : MainAPI() {
 
     override val mainPage = mainPageOf(
         "${mainUrl}/trending_videos/" to "New Videos",
-        "${mainUrl}/j2/channel/familyxxx/" to "Family XXX",
+        "${mainUrl}/7r/channel/adult+time/" to "Adult Time ",
         "${mainUrl}/ce/channel/bratty+milf/" to "Bratty MILF",
         "${mainUrl}/cf/channel/bratty+sis/" to "Bratty Sis",
-        "${mainUrl}/k5/channel/japan+hdv/" to "Japan HDV",
-        "${mainUrl}/j3/channel/hot+wife+xxx/" to "Hot Wife XXX",
-        "${mainUrl}/d6/channel/my+family+pies/" to "My Family Pies",
         "${mainUrl}/ho/channel/brazzers/" to "Brazzers",
-        "${mainUrl}/6l/channel/mylf/" to "MYLF",
+        "${mainUrl}/49/channel/deeper/" to "Deeper",
         "${mainUrl}/9n/channel/evil+angel/" to "Evil Angel",
+        "${mainUrl}/j2/channel/familyxxx/" to "Family XXX",
+        "${mainUrl}/9h/channel/hardx/" to "HardX",
+        "${mainUrl}/j3/channel/hot+wife+xxx/" to "Hot Wife XXX",
+        "${mainUrl}/k5/channel/japan+hdv/" to "Japan HDV",
+        "${mainUrl}/6w/channel/javhd/" to "JavHD",
+        "${mainUrl}/4w/channel/letsdoeit/" to "Letsdoeit",
+        "${mainUrl}/d6/channel/my+family+pies/" to "My Family Pies",
+        "${mainUrl}/6l/channel/mylf/" to "MYLF",
+        "${mainUrl}/3x/channel/naughty+america/" to "Naughty America",
+        "${mainUrl}/ch/channel/nf+busty/" to "NF Busty",
+        "${mainUrl}/ci/channel/nubile+films/" to "Nubile Films",
+        "${mainUrl}/cc/channel/nubiles+porn/" to "Nubiles Porn",
+        "${mainUrl}/60/channel/puretaboo/" to "PureTaboo",
+        "${mainUrl}/hp/channel/realitykings/" to "RealityKings",
+        "${mainUrl}/6c/channel/teamskeet/" to "TeamSkeet",
+        "${mainUrl}/47/channel/vixen/" to "Vixen",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val document = app.get(request.data + page).document
-        val home = document.select("div.video-list-with-ads > div.video-item")
-            .mapNotNull { it.toSearchResult() }
+        var videos = document.select("div.video-item")
+        if (videos.isEmpty()) videos = document.select("div.mb-6").select(".js-video-item")
+        val home = videos.mapNotNull { it.toSearchResult() }
 
         return newHomePageResponse(
             list = HomePageList(
@@ -44,10 +60,13 @@ class spankbang : MainAPI() {
     }
 
     private fun Element.toSearchResult(): SearchResponse {
-        val title = fixTitle(this.select("a.thumb > picture > img").attr("alt")).trim().toString()
-        val href = fixUrl(this.select("a.thumb").attr("href"))
-        val posterUrl = fixUrlNull(this.select("a.thumb > picture > img").attr("data-src"))
-        Log.d("title", "Title check")
+        var a = this.select("a[x-data=\"videoItem\"]")
+        if (a.isEmpty()) a = this.select("a.thumb")
+
+        val img = a.select("picture > img")
+        val title = fixTitle(img.attr("alt")).trim()
+        val posterUrl = fixUrlNull(img.attr("data-src"))
+        val href = fixUrl(a.attr("href"))
 
         return newMovieSearchResponse(title, href, TvType.Movie) {
             this.posterUrl = posterUrl
@@ -98,20 +117,39 @@ class spankbang : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val document = app.get(data).document
+        val script = document.select("script").find { it.data().contains("stream_data") }?.data()
+            ?: return false
+        val streamData = script.substringAfter("var stream_data = ").substringBefore(";")
+        val obj = JSONObject(streamData)
+        val keys = mutableListOf<String>()
+        obj.keys().forEach { keys.add(it) }
+        keys.map { key ->
+            try {
+                val link = obj.getJSONArray(key).getString(0)
+                val type =
+                    if (key.contains("m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
 
-        document.select("div#video_container").map { res ->
-            callback.invoke(
-                newExtractorLink(
-                    source = this.name,
-                    name = this.name,
-                    url = fixUrl(res.selectFirst("video > source")?.attr("src")?.trim().toString()),
+                val quality = if (type != ExtractorLinkType.M3U8) key.replace("p", "")
+                    .toIntOrNull() else null
+
+                val name = if (quality == null) this.name + " " + key else this.name
+                Log.d("${this.name} - $key", link)
+                callback.invoke(
+                    newExtractorLink(
+                        source = name,
+                        name = name,
+                        url = link,
+                        type = type
+                    )
+                    {
+                        this.referer = data
+                        quality?.let { this.quality = it }
+                    }
                 )
-                {
-                    this.referer = data
-                }
-            )
-        }
+            } catch (_: JSONException) {
 
+            }
+        }
         return true
     }
 }
