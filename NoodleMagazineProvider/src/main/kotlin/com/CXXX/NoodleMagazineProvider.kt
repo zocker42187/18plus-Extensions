@@ -1,9 +1,16 @@
 package com.CXXX
 
+import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.utils.AppUtils.toJson
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Interceptor
+import okhttp3.Response
 import org.jsoup.nodes.Element
 import org.json.JSONObject
+import java.net.URLDecoder
+import java.net.URLEncoder
 
 class NoodleMagazineProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://tyler-brown.com"
@@ -47,9 +54,9 @@ class NoodleMagazineProvider : MainAPI() { // all providers must be an instance 
     override suspend fun search(query: String): List<MovieSearchResponse> {
         val searchresult = mutableListOf<MovieSearchResponse>()
 
-        (0..10).toList().apmap { page ->
+        (0..10).toList().amap { page ->
             val doc = app.get("$mainUrl/video/$query?p=$page").document
-            doc.select("div.item").apmap { res ->
+            doc.select("div.item").amap { res ->
                 res.toSearchResult()?.let { searchresult.add(it) }
             }
         }
@@ -86,24 +93,43 @@ class NoodleMagazineProvider : MainAPI() { // all providers must be an instance 
                 .substringBefore(";")
             val jsonObject = JSONObject(jsonString)
             val sources = jsonObject.getJSONArray("sources")
-            val extlinkList = mutableListOf<ExtractorLink>()
 
             for (i in 0 until sources.length()) {
                 val source = sources.getJSONObject(i)
-                extlinkList.add(
+                val file = source.getString("file")
+                val quality = source.getString("label")
+                callback(
                     newExtractorLink(
                         source = name,
                         name = name,
-                        url = source.getString("file"),
+                        url = file,
+                        type = ExtractorLinkType.VIDEO
                     )
                     {
-                        this.referer = data
-                        this.quality = getQualityFromName(source.getString("label"))
+                        this.referer = data.substringBefore("watch/")
+                        this.quality = getQualityFromName(quality)
+                        this.headers = mapOf(
+                            "Host" to file.toHttpUrl().host,
+                            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"
+                        )
                     }
                 )
             }
-            extlinkList.forEach(callback)
         }
         return true
+    }
+
+    override fun getVideoInterceptor(extractorLink: ExtractorLink): Interceptor? {
+        return object : Interceptor {
+            override fun intercept(chain: Interceptor.Chain): Response {
+                val request = chain.request()
+                val response = chain.proceed(request)
+                if (response.code != 200) {
+                    Log.d("$name: interceptor", response.peekBody(1024).string())
+                }
+                return response
+            }
+
+        }
     }
 }
