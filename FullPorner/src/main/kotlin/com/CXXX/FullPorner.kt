@@ -1,9 +1,12 @@
 package com.CXXX
 
+import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
+import com.lagradost.cloudstream3.utils.AppUtils.parseJson
+import com.lagradost.cloudstream3.utils.AppUtils.toJson
 
 class FullPorner : MainAPI() {
     override var mainUrl = "https://fullporner.com"
@@ -77,22 +80,6 @@ class FullPorner : MainAPI() {
         val title =
             document.selectFirst("div.video-block div.single-video-left div.single-video-title h2")
                 ?.text()?.trim().toString()
-
-        val iframeUrl = fixUrlNull(
-            document.selectFirst("div.video-block div.single-video-left div.single-video iframe")
-                ?.attr("src")
-        ) ?: ""
-
-        val iframeDocument = app.get(iframeUrl).document
-
-        val videoID =
-            Regex("""var id = \"(.+?)\"""").find(iframeDocument.html())?.groupValues?.get(1)
-        val pornTrexDocument = app.get("https://www.porntrex.com/embed/${videoID}").document
-        val matchResult = Regex("""preview_url:\s*'([^']+)'""").find(pornTrexDocument.html())
-        val poster = matchResult?.groupValues?.get(1)
-        val posterUrl = fixUrlNull("https:$poster")
-
-
         val tags =
             document.select("div.video-block div.single-video-left div.single-video-title p.tag-link span a")
                 .map { it.text() }
@@ -106,12 +93,51 @@ class FullPorner : MainAPI() {
             document.select("div.video-block div.video-recommendation div.video-card")
                 .mapNotNull { it.toSearchResult() }
 
-        return newMovieLoadResponse(title, url, TvType.NSFW, url) {
+
+
+        val iframeUrl = fixUrlNull(
+            document.selectFirst("div.video-block div.single-video-left div.single-video iframe")
+                ?.attr("src")
+        ) ?: ""
+        val iframeDocument = app.get(iframeUrl).document
+        val videoID =
+            Regex("""var id = \"(.+?)\"""").find(iframeDocument.html())?.groupValues?.get(1)?.reversed()
+//        val script = iframeDocument.select("script").find { it.data().contains("// Player variables") }
+        val q = iframeUrl.substringAfterLast("/")
+        val qualities = btq(q.toIntOrNull() ?: q)
+        val posterUrl = getPoster(videoID, qualities.isNotEmpty())
+
+
+        return newMovieLoadResponse(title, url, TvType.NSFW, LinkData(qualities, videoID)) {
             this.posterUrl = posterUrl
             this.plot = description
             this.tags = tags
             this.recommendations = recommendations
             addActors(actors)
+        }
+    }
+
+    private fun btq(f: Any): List<String> {
+        val num = when (f) {
+            is String -> f.toInt(2)
+            is Int -> f
+            else -> throw IllegalArgumentException("Invalid type for f: must be String or Int")
+        }
+        val result = mutableListOf<String>()
+        if (num and 1 != 0) result.add("360")
+        if (num and 2 != 0) result.add("480")
+        if (num and 4 != 0) result.add("720")
+        if (num and 8 != 0) result.add("1080")
+        return result
+    }
+
+    private fun getPoster(id: String?, quality: Boolean): String? {
+        if (id == null) return null
+        return if (quality) {
+            "https://xiaoshenke.net/vid/$id/720/i"
+        } else {
+            val path = "${id.toInt() / 1000}000"
+            "https://imgx.xiaoshenke.net/posterz/contents/videos_screenshots/$path/$id/preview_720p.mp4.jpg"
         }
     }
 
@@ -121,44 +147,25 @@ class FullPorner : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val document = app.get(data).document
-        val iframeUrl = fixUrlNull(
-            document.selectFirst("div.video-block div.single-video-left div.single-video iframe")
-                ?.attr("src")
-        ) ?: ""
-        val extlinkList = mutableListOf<ExtractorLink>()
-        val iframeDocument = app.get(iframeUrl).document
-        val videoID =
-            Regex("""var id = \"(.+?)\"""").find(iframeDocument.html())?.groupValues?.getOrNull(1)
-
-        if (videoID != null) {
-            val pornTrexDocument = app.get("https://www.porntrex.com/embed/$videoID").document
-            val videoUrlsRegex =
-                Regex("""(?:video_url|video_alt_url2|video_alt_url3): \'(.+?)\',""")
-            val matchResults = videoUrlsRegex.findAll(pornTrexDocument.html())
-
-            val videoUrls = matchResults.map { it.groupValues[1] }.toList()
-
-            videoUrls.forEach { videoUrl ->
-                extlinkList.add(
-                    newExtractorLink(
-                        name,
-                        name,
-                        videoUrl,
-                        INFER_TYPE
-                    ) {
-                        this.referer = ""
-                        this.quality =
-                            Regex("""_(1080|720|480|360)p\.mp4""").find(videoUrl)?.groupValues?.getOrNull(
-                                1
-                            )?.toIntOrNull() ?: Qualities.Unknown.value
-                    }
+        val d = parseJson<LinkData>(data)
+        if (d.id == null) return false
+        d.qualities.map {
+            val url = "${d.prefix}/${d.id}/$it"
+            callback(
+                newExtractorLink(
+                    this.name,
+                    this.name,
+                    url
                 )
-            }
+            )
         }
-        extlinkList.forEach(callback)
-
         return true
     }
+
+    data class LinkData(
+        val qualities: List<String>,
+        val id: String?,
+        val prefix: String = "https://xiaoshenke.net/vid",
+    )
 
 }
