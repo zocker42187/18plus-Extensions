@@ -10,5 +10,6 @@ class InternetchicksProvider: Plugin() {
         registerMainAPI(Xtapes())
         registerExtractorAPI(Stream())
         registerExtractorAPI(VID())
+        registerExtractorAPI(XtapesExtractor())
     }
 }
