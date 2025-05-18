@@ -4,27 +4,38 @@ import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.TvType
 import android.util.Log
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.gson.JsonObject
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.network.CloudflareKiller
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.INFER_TYPE
 import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import com.lagradost.nicehttp.NiceResponse
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Interceptor
+import okhttp3.Response
+import org.json.JSONArray
+import org.json.JSONObject
 
 class Vlxx : MainAPI() {
     private val DEV = "DevDebug"
     private val globaltvType = TvType.NSFW
 
     override var name = "Vlxx"
-    override var mainUrl = "https://vlxx.tech"
+    override var mainUrl = "https://vlxx.now"
     override val supportedTypes = setOf(TvType.NSFW)
     override val hasDownloadSupport = false
     override val hasMainPage = true
     override val hasQuickSearch = false
     private val interceptor = CloudflareKiller()
+
+    companion object {
+        val images = mutableMapOf<String, String>() // page url, poster url
+    }
 
     private suspend fun getPage(url: String, referer: String): NiceResponse {
         var count = 0
@@ -44,7 +55,6 @@ class Vlxx : MainAPI() {
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val apiName = this.name
         val document = getPage(mainUrl, mainUrl).document
         val all = ArrayList<HomePageList>()
         val title = "Homepage"
@@ -62,6 +72,9 @@ class Vlxx : MainAPI() {
                     type = globaltvType,
                 ) {
                     //this.apiName = apiName
+                    img?.let { i ->
+                        images[link] = i
+                    }
                     this.posterUrl = img
                 }
             }.distinctBy { it.url }
@@ -73,7 +86,7 @@ class Vlxx : MainAPI() {
                 )
             )
         }
-        return HomePageResponse(all)
+        return newHomePageResponse(all)
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
@@ -91,6 +104,7 @@ class Vlxx : MainAPI() {
                     type = globaltvType,
                 ) {
                     //this.apiName = apiName
+                    images[link] = imgArticle
                     this.posterUrl = imgArticle
                     this.year = year
                     this.posterHeaders = interceptor.getCookieHeaders(url).toMap()
@@ -99,22 +113,19 @@ class Vlxx : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val apiName = this.name
         val doc = getPage(url, url).document
 
         val container = doc.selectFirst("div#container")
         val title = container?.selectFirst("h2")?.text() ?: "No Title"
         val descript = container?.selectFirst("div.video-description")?.text()
         val year = null
-        val poster = null //No image on load page
         return newMovieLoadResponse(
             name = title,
             url = url,
             dataUrl = url,
             type = globaltvType,
         ) {
-            this.apiName = apiName
-            this.posterUrl = poster
+            this.posterUrl = images[url]
             this.year = year
             this.plot = descript
             this.posterHeaders = interceptor.getCookieHeaders(url).toMap()
@@ -129,7 +140,7 @@ class Vlxx : MainAPI() {
     ): Boolean {
         val pathSplits = data.split("/")
         val id = pathSplits[pathSplits.size - 2]
-        Log.i(DEV, "Data -> ${data} id -> ${id}")
+        Log.i(DEV, "Data -> $data id -> $id")
         val res = app.post(
             "${mainUrl}/ajax.php",
             headers = interceptor.getCookieHeaders(data).toMap(),
@@ -140,57 +151,41 @@ class Vlxx : MainAPI() {
             ),
             referer = mainUrl
         ).text
-        Log.i(DEV, "res ${res}")
+        Log.i(DEV, "res $res")
 
-        val json = getParamFromJS(res, "var opts = {\\r\\n\\t\\t\\t\\t\\t\\tsources:", "}]")
-        Log.i(DEV, "json $json")
-        json?.let {
-            tryParseJson<List<Sources?>>(it)?.forEach { vidlink ->
-                vidlink?.file?.let { file ->
-                    callback.invoke(
-                        newExtractorLink(
-                            source = file,
-                            name = this.name,
-                            url = file,
-                            type = INFER_TYPE,
-                        )
-                        {
-                            this.referer = data
-                            this.quality = getQualityFromName(vidlink.label)
-                        }
-                    )
-                }
-            }
-        }
+        val json = JSONObject(res)
+        val iframe =
+            json.get("player").toString().substringAfter("src=").substringBefore(" scrolling=")
+                .replace("\"", "")
+        Log.i(DEV, "json $iframe")
+        val resp = app.get(iframe).document
+        val script = resp.select("script").find { it.data().contains("var jwplayer_mute") }?.data()
+            ?: return false
+        val sources = script.substringAfter("sources: ").substringBefore("],") + "]"
+        val array = JSONArray(sources).get(0) as JSONObject
+        val url = array.getString("file")
+        Log.i(DEV, "url $url")
+        callback(newExtractorLink(
+            this.name,
+            this.name,
+            url,
+            ExtractorLinkType.M3U8
+        ) {
+            this.headers = mapOf("Host" to url.toHttpUrl().host)
+        })
         return true
-
     }
 
-    private fun getParamFromJS(str: String, key: String, keyEnd: String): String? {
-        try {
-            val firstIndex = str.indexOf(key) + key.length // 4 to index point to first char.
-            val temp = str.substring(firstIndex)
-            val lastIndex = temp.indexOf(keyEnd) + (keyEnd.length)
-            val jsonConfig = temp.substring(0, lastIndex) //
-            Log.i(DEV, "jsonConfig ${jsonConfig}")
+    override fun getVideoInterceptor(extractorLink: ExtractorLink): Interceptor? {
+        return object : Interceptor {
+            override fun intercept(chain: Interceptor.Chain): Response {
+                val request = chain.request()
+                val response = chain.proceed(request)
+                Log.d(DEV, response.peekBody(1024).string())
+                // Apparently the app has some problems with this site m3u8 links
+                return response
+            }
 
-            val re = jsonConfig.replace("\\r", "")
-                .replace("\\t", "")
-                .replace("\\\"", "\"")
-                .replace("\\\\\\/", "/")
-                .replace("\\n", "")
-
-            return re
-        } catch (e: Exception) {
-            //e.printStackTrace()
-            logError(e)
         }
-        return null
     }
-
-    data class Sources(
-        @JsonProperty("file") val file: String?,
-        @JsonProperty("type") val type: String?,
-        @JsonProperty("label") val label: String?
-    )
 }
