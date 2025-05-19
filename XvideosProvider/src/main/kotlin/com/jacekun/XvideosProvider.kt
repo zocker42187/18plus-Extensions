@@ -67,6 +67,8 @@ class XvideosProvider : MainAPI() {
         val url = "$mainUrl?k=${query}"
         val document = app.get(url).document
         return document.select("div.thumb-block").mapNotNull {
+            val isVideo = it.select(".prof-thumb-title").isEmpty()
+            if (!isVideo) return@mapNotNull null
             val title = it.selectFirst("p.title a")?.text()
                 ?: it.selectFirst("p.profile-name a")?.text()
                 ?: ""
@@ -86,7 +88,7 @@ class XvideosProvider : MainAPI() {
                 this.posterUrl = image
             }
 
-        }.toList()
+        }
     }
 
     override suspend fun load(url: String): LoadResponse {
