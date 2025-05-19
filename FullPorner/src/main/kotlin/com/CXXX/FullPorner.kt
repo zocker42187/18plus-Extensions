@@ -7,6 +7,7 @@ import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
+import okhttp3.HttpUrl.Companion.toHttpUrl
 
 class FullPorner : MainAPI() {
     override var mainUrl = "https://fullporner.com"
@@ -94,26 +95,27 @@ class FullPorner : MainAPI() {
                 .mapNotNull { it.toSearchResult() }
 
 
-
         val iframeUrl = fixUrlNull(
             document.selectFirst("div.video-block div.single-video-left div.single-video iframe")
                 ?.attr("src")
         ) ?: ""
         val iframeDocument = app.get(iframeUrl).document
         val videoID =
-            Regex("""var id = \"(.+?)\"""").find(iframeDocument.html())?.groupValues?.get(1)?.reversed()
+            Regex("""var id = "(.+)"""").find(iframeDocument.html())?.groupValues?.get(1)
+                ?.reversed()
 //        val script = iframeDocument.select("script").find { it.data().contains("// Player variables") }
         val q = iframeUrl.substringAfterLast("/")
         val qualities = btq(q.toIntOrNull() ?: q)
         val posterUrl = getPoster(videoID, qualities.isNotEmpty())
 
-
         return newMovieLoadResponse(title, url, TvType.NSFW, LinkData(qualities, videoID)) {
-            this.posterUrl = posterUrl
             this.plot = description
             this.tags = tags
             this.recommendations = recommendations
             addActors(actors)
+            posterUrl?.let { p ->
+                this.addPoster(p, headers = mapOf("Host" to p.toHttpUrl().host))
+            }
         }
     }
 
@@ -147,6 +149,7 @@ class FullPorner : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
+
         val d = parseJson<LinkData>(data)
         if (d.id == null) return false
         d.qualities.map {
