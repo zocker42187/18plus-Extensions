@@ -5,6 +5,9 @@ import org.json.JSONObject
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Interceptor
+import okhttp3.Response
 
 class actionviewphotography : MainAPI() {
     override var mainUrl = "https://ukdevilz.com"
@@ -105,20 +108,37 @@ class actionviewphotography : MainAPI() {
             for (i in 0 until sources.length()) {
                 val source = sources.getJSONObject(i)
                 Log.d("Phisher", source.toString())
+                val file = httpsify(source.getString("file"))
                 extlinkList.add(
                     newExtractorLink(
                         source = name,
                         name = name,
-                        url = httpsify(source.getString("file")),
+                        url = file,
                         type = INFER_TYPE
                     ) {
                         referer = ""
                         quality = getQualityFromName(source.getString("label"))
+                        this.headers = mapOf(
+                            "Host" to file.toHttpUrl().host,
+                            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"
+                        )
                     }
                 )
             }
             extlinkList.forEach(callback)
         }
         return true
+    }
+
+    override fun getVideoInterceptor(extractorLink: ExtractorLink): Interceptor {
+        return object : Interceptor{
+            override fun intercept(chain: Interceptor.Chain): Response {
+                // For some reason it doesn't work without interceptor.
+                val request = chain.request()
+                val response = chain.proceed(request)
+                Log.d("$name - Interceptor", response.peekBody(1024).string())
+                return response
+            }
+        }
     }
 }
