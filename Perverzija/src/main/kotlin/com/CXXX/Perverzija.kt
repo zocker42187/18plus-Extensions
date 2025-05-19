@@ -144,6 +144,7 @@ class Perverzija : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
+        // They added cloudflare in the search page
         val searchResponse = mutableListOf<SearchResponse>()
         val maxPages = if (query.contains(" ")) 6 else 20
         for (i in 1..maxPages) {
