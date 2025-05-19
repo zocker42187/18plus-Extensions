@@ -30,7 +30,7 @@ class CamsodaProvider : MainAPI() {
                 url = "$mainUrl/${user.username}",
                 apiName = this@CamsodaProvider.name,
                 type = TvType.Live,
-                posterUrl = if (user.offlinePictureUrl.isNullOrEmpty()) user.thumbUrl else user.offlinePictureUrl,
+                posterUrl = if (user.thumbUrl.isNullOrEmpty()) user.offlinePictureUrl else user.thumbUrl,
                 lang = null
             )
         }
