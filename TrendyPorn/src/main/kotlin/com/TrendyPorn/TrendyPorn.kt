@@ -35,10 +35,12 @@ class TrendyPorn : MainAPI() {
         )
     }
 
-    private fun Element.toSearchResult(): SearchResponse {
+    private fun Element.toSearchResult(): SearchResponse? {
         val title = this.select("a").attr("title")
         val href = this.select("a").attr("href")
         val posterUrl = this.select("img").attr("data-original")
+        val isVideo = this.select(".duration").isNotEmpty()
+        if (!isVideo) return null
         return newMovieSearchResponse(title, href, TvType.Movie) {
             this.posterUrl = posterUrl
         }
