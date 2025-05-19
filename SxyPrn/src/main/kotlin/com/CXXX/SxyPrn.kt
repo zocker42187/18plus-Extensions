@@ -2,14 +2,9 @@ package com.CXXX
 
 import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.AppUtils
-import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.INFER_TYPE
 import org.jsoup.nodes.Element
-import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
-import com.lagradost.cloudstream3.utils.newExtractorLink
 
 class SxyPrn : MainAPI() {
     override var mainUrl = "https://sxyprn.com"
@@ -124,10 +119,10 @@ class SxyPrn : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val document = app.get(data).document
-        val a = document.select("a.post_time").first()?.attr("title") ?: return false
-        val links = a.substringAfterLast("#").substringAfter(" ").split(" ")
-        links.map {
-            loadExtractor(it, null, subtitleCallback, callback)
+        val div = document.select(".post_text").first() ?: return false
+        val a = div.select(".extlink")
+        a.map {
+            loadExtractor(it.attr("href"), null, subtitleCallback, callback)
         }
         return true
     }
