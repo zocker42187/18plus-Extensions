@@ -55,7 +55,7 @@ class SextbProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-
+        //They added cloudflare in the search page
         val searchResponse = mutableListOf<SearchResponse>()
 
         for (i in 1..5) {
@@ -110,8 +110,6 @@ class SextbProvider : MainAPI() {
             val finalUrl = iframeSrc.replace("\\\"", "").replace("\\", "").substringBefore("?")
             loadExtractor(finalUrl, subtitleCallback, callback)
         }
-
-
         return true
     }
 }
