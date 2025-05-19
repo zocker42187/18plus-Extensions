@@ -49,7 +49,7 @@ class HentaiHaven : MainAPI() {
     override suspend fun search(query: String): List<SearchResponse> {
         val searchUrl = "${mainUrl}/?s=${query}&post_type=wp-manga"
         return app.get(searchUrl).document
-            .select("div.c-tabs-item div.row.c-tabs-item__content")
+            .select("div.c-tabs-item__content > div.row")
             .getResults()
     }
 
@@ -185,8 +185,10 @@ class HentaiHaven : MainAPI() {
                 ?.attr("title")?.takeLast(4)?.toIntOrNull()
 
             val imageDiv = firstA?.selectFirst("img")
-            val image = imageDiv?.attr("data-src")
-
+            var image = imageDiv?.attr("data-src")
+            if (image.isNullOrEmpty()) {
+                image = it.select("img.img-fluid").attr("src")
+            }
             val latestEp = innerDiv?.selectFirst("div.list-chapter")
                 ?.selectFirst("div.chapter-item")
                 ?.selectFirst("a")
