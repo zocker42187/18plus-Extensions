@@ -1,6 +1,7 @@
 package com.CXXX
 
 //import android.util.Log
+import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
@@ -29,7 +30,7 @@ class FreePornVideos : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get("$mainUrl/${request.data}/${page + 1}/").document
+        val document = app.get("$mainUrl/${request.data}/${page}/").document
         val home = document.select("#list_videos_common_videos_list_items > div.item").mapNotNull {
             it.toSearchResult()
         }
@@ -47,7 +48,9 @@ class FreePornVideos : MainAPI() {
     private fun Element.toSearchResult(): SearchResponse {
         val title = this.select("strong.title").text()
         val href = this.selectFirst("a")!!.attr("href")
-        val posterUrl = this.select("a img").attr("data-src")
+        var posterUrl = this.select("img.thumb").attr("data-src")
+        if (posterUrl.isEmpty()) posterUrl = this.select("img.thumb").attr("src")
+        Log.d("BANANA", posterUrl)
         return newMovieSearchResponse(title, href, TvType.Movie) {
             this.posterUrl = posterUrl
         }
