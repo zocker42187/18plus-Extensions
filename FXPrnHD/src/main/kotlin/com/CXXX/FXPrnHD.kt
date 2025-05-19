@@ -6,6 +6,7 @@ import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import com.lagradost.cloudstream3.utils.*
+import khttp.post
 import org.jsoup.nodes.Element
 
 class Fxprnhd : MainAPI() {
@@ -48,8 +49,10 @@ class Fxprnhd : MainAPI() {
     private fun Element.toSearchResult(): SearchResponse? {
         val title = this.selectFirst("span.title")?.text() ?: return null
         val href = fixUrl(this.selectFirst("a")!!.attr("href"))
-        val posterUrl = this.select("img").attr("src")
-        Log.d("posterUrl", posterUrl)
+        var posterUrl = this.select("img").attr("src")
+        if (posterUrl.isEmpty()) {
+            posterUrl = this.select("video.wpst-trailer").attr("poster")
+        }
         return newMovieSearchResponse(title, href, TvType.Movie) {
             this.posterUrl = posterUrl
         }
@@ -58,12 +61,9 @@ class Fxprnhd : MainAPI() {
 
     override suspend fun search(query: String): List<SearchResponse> {
         val searchResponse = mutableListOf<SearchResponse>()
-        for (i in 1..15) {
+        for (i in 1..5) {
             val document =
-                app.get(
-                    "$mainUrl/search/?s=query&page=$i",
-                    headers = mapOf("X-Requested-With" to "XMLHttpRequest")
-                ).document
+                app.get("$mainUrl/page/$i/?s=$query").document
             val results =
                 document.select("div.videos-list > article")
                     .mapNotNull {
