@@ -1,5 +1,6 @@
 package com.megix
 
+import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
@@ -78,14 +79,13 @@ class YesPornPlease : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
         ): Boolean {
-
         val document = app.get(data).document
         val iframes = document.select("iframe")
         if(iframes.size >= 3) {
             val thirdIframe = iframes[2]
-            val link = thirdIframe.attr("src")
+            val link = thirdIframe.attr("data-litespeed-src")
             val doc = app.get(link).document
-            val source = doc.selectFirst("video > source")!!.attr("src")
+            val source = doc.selectFirst("video > source")?.attr("src") ?: return false
             callback.invoke(
                 newExtractorLink(
                     this.name,
