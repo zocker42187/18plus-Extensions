@@ -56,7 +56,7 @@ class NoodleMagazineProvider : MainAPI() { // all providers must be an instance 
 
         (0..10).toList().amap { page ->
             val doc = app.get("$mainUrl/video/$query?p=$page").document
-            doc.select("div.item").amap { res ->
+            doc.select("div.item").mapNotNull { res ->
                 res.toSearchResult()?.let { searchresult.add(it) }
             }
         }
