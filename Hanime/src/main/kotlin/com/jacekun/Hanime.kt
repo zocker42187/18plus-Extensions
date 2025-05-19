@@ -9,7 +9,6 @@ import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.lagradost.cloudstream3.network.CloudflareKiller
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.newExtractorLink
@@ -144,7 +143,14 @@ class Hanime : MainAPI() {
         return HomePageResponse(items)
     }
 
-    data class HanimeSearchResult(
+    data class SearchResult(
+        @JsonProperty("page") val page: Int,
+        @JsonProperty("nbPages") val nbPages: Int,
+        @JsonProperty("nbHits") val nbHits: Int,
+        @JsonProperty("hitsPerPage") val hitsPerPage: Int,
+        @JsonProperty("hits") val hits: String,
+    )
+    data class Hit(
         @JsonProperty("id") val id: Int,
         @JsonProperty("name") val name: String,
         @JsonProperty("slug") val slug: String,
@@ -155,7 +161,7 @@ class Hanime : MainAPI() {
     )
 
     override suspend fun search(query: String): ArrayList<SearchResponse> {
-        val link = "https://search.htv-services.com/"
+        val link = "https://search.htv-services.com/search"
         val data = mapOf(
             "search_text" to query,
             "tags" to emptyList<String>(),
@@ -183,8 +189,9 @@ class Hanime : MainAPI() {
         val searchResults = ArrayList<SearchResponse>()
 
         Log.i(DEV, "Response => (${response.code}) ${responseText}")
-        tryParseJson<List<HanimeSearchResult?>?>(responseText)?.reversed()?.forEach {
-            val rawName = it?.name ?: return@forEach
+        val results = tryParseJson<SearchResult>(responseText)?.hits ?: return arrayListOf()
+            tryParseJson<List<Hit>>(results)?.forEach {
+            val rawName = it.name
             val title = getTitle(rawName)
             if (!titles.contains(title)) {
                 titles.add(title)
@@ -197,7 +204,7 @@ class Hanime : MainAPI() {
                         it.coverUrl,
                         unixToYear(it.releasedAt),
                         EnumSet.of(DubStatus.Subbed),
-                        it.titles?.get(0),
+                        it.titles?.getOrNull(0),
                     )
                 )
             }
