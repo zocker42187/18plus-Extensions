@@ -1,0 +1,8 @@
+{
+  "name": "NSFW",
+  "description": "This Repo Contains The NSFW sources",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/zocker42187/18plus-Extensions/builds/plugins.json"
+  ]
+}
