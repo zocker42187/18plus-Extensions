@@ -5,6 +5,7 @@ import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.network.WebViewResolver
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.Coroutines.main
+import khttp.get
 import org.json.JSONObject
 import org.jsoup.select.Elements
 
@@ -107,32 +108,21 @@ class WatchDirty : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val response = app.get(
-            data, interceptor = WebViewResolver(Regex("""https://www\.eporner\.com/xhr/video"""))
-        )
-        val json = response.text
+        val response = app.get(data).document
+        val src = response.select("video.fp-engine").first()?.attr("src").orEmpty()
 
-        val jsonObject = JSONObject(json)
-        val sources = jsonObject.getJSONObject("sources")
-        val mp4Sources = sources.getJSONObject("mp4")
-        val qualities = mp4Sources.keys()
-        while (qualities.hasNext()) {
-            val quality = qualities.next() as String
-            val sourceObject = mp4Sources.getJSONObject(quality)
-            val src = sourceObject.getString("src")
-            val labelShort = sourceObject.getString("labelShort") ?: ""
-            callback.invoke(
-                newExtractorLink(
-                    source = name,
-                    name = name,
-                    url = src,
-                    type = INFER_TYPE
-                ) {
-                    this.referer = ""
-                    this.quality = getIndexQuality(labelShort)
-                }
-            )
-        }
+        callback.invoke(
+            newExtractorLink(
+                source = name,
+                name = name,
+                url = src,
+                type = INFER_TYPE
+            ) {
+                this.referer = ""
+                this.quality = getIndexQuality(src)
+            }
+        )
+
         return true
     }
 
