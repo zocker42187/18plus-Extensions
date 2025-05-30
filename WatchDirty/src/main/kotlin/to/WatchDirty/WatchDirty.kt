@@ -29,19 +29,24 @@ class WatchDirty : MainAPI() {
         )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        var url = "$mainUrl/${request.data}/$page"
+        var url = "$mainUrl/${request.data}/$page/"
 
         if (request.data.contentEquals("currently-playing")) {
             url = "$mainUrl"
-        } else if (request.data.endsWith("week-")) {
+        } else if (request.data.endsWith("-week")) {
             url = "$mainUrl/${request.data.removeSuffix("-week")}/$page/?sort_by=video_viewed_week"
         }
 
         val document = app.get(url).document
+
         var elements = document.select("div.item")
-        if (request.data.endsWith("week-")) {
+
+        if (request.data.contentEquals("currently-playing")) {
             elements = Elements(elements.drop(12).take(12))
+        } else if (request.data.endsWith("-week")) {
+            elements = Elements(elements.take(12))
         }
+
         val home = elements.mapNotNull { it.toSearchResult() }
 
         return newHomePageResponse(
@@ -109,19 +114,21 @@ class WatchDirty : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val response = app.get(data).document
-        val src = response.select("video.fp-engine").first()?.attr("src").orEmpty()
+        response.select("video.fp-engine").map { vids ->
 
-        callback.invoke(
-            newExtractorLink(
-                source = name,
-                name = name,
-                url = src,
-                type = INFER_TYPE
-            ) {
-                this.referer = ""
-                this.quality = getIndexQuality(src)
-            }
-        )
+            callback.invoke(
+                newExtractorLink(
+                    source = name,
+                    name = name,
+                    url = vids.attr("src"),
+                    type = INFER_TYPE
+                ) {
+                    this.referer = data
+                    this.quality = getIndexQuality(vids.attr("src"))
+                }
+            )
+
+        }
 
         return true
     }
