@@ -120,7 +120,7 @@ class WatchDirty : MainAPI() {
                 newExtractorLink(
                     source = name,
                     name = name,
-                    url = vids.attr("src"),
+                    url = vids.attr("src").split("?")[1],
                     type = INFER_TYPE
                 ) {
                     this.referer = data
