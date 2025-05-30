@@ -160,6 +160,7 @@ class Hanime : MainAPI() {
         @JsonProperty("released_at") val releasedAt: Int
     )
 
+    @SuppressLint("SuspiciousIndentation")
     override suspend fun search(query: String): ArrayList<SearchResponse> {
         val link = "https://search.htv-services.com/search"
         val data = mapOf(
