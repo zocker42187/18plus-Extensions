@@ -1,12 +1,27 @@
 package to.WatchDirty
 
+import com.lagradost.cloudstream3.HomePageList
+import com.lagradost.cloudstream3.HomePageResponse
+import com.lagradost.cloudstream3.LoadResponse
+import com.lagradost.cloudstream3.MainAPI
+import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.SearchResponse
+import com.lagradost.cloudstream3.SubtitleFile
+import com.lagradost.cloudstream3.TvType
+import com.lagradost.cloudstream3.VPNStatus
+import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.fixTitle
+import com.lagradost.cloudstream3.fixUrl
+import com.lagradost.cloudstream3.fixUrlNull
+import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newHomePageResponse
+import com.lagradost.cloudstream3.newMovieLoadResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
+import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.INFER_TYPE
+import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.network.WebViewResolver
-import com.lagradost.cloudstream3.utils.*
-import com.lagradost.cloudstream3.utils.Coroutines.main
-import khttp.get
-import org.json.JSONObject
 import org.jsoup.select.Elements
 
 class WatchDirty : MainAPI() {
@@ -32,7 +47,7 @@ class WatchDirty : MainAPI() {
         var url = "$mainUrl/${request.data}/$page/"
 
         if (request.data.contentEquals("currently-playing")) {
-            url = "$mainUrl"
+            url = mainUrl
         } else if (request.data.endsWith("-week")) {
             url = "$mainUrl/${request.data.removeSuffix("-week")}/$page/?sort_by=video_viewed_week"
         }
@@ -62,10 +77,10 @@ class WatchDirty : MainAPI() {
     private fun Element.toSearchResult(): SearchResponse {
         val title = fixTitle(this.select("strong.title").text()).trim()
         val href = fixUrl(this.select("a").attr("href"))
-        val posterUrl = this.selectFirst("img")?.let {
-            fixUrl(it.attr("data-src")).takeIf { url -> url.isNotBlank() }
+        val posterUrl = this.selectFirst("img.thumb")?.let {
+            fixUrl(it.attr("data-webp")).takeIf { url -> url.isNotBlank() }
                 ?: fixUrl(it.attr("src"))
-        } ?: null
+        } ?: "https://watchdirty.is/contents/playerother/theme/logo.png"
         return newMovieSearchResponse(title, href, TvType.Movie) {
             this.posterUrl = posterUrl
         }
@@ -120,7 +135,7 @@ class WatchDirty : MainAPI() {
                 newExtractorLink(
                     source = name,
                     name = name,
-                    url = vids.attr("src").split("?")[1],
+                    url = vids.attr("src").split("?")[0],
                     type = INFER_TYPE
                 ) {
                     this.referer = data
