@@ -128,22 +128,23 @@ class WatchDirty : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val response = app.get(data).document
-        response.select("video.fp-engine").map { vids ->
+        val document = app.get(data).document
+        document.select("video.fp-engine").map { vid ->
 
             callback.invoke(
                 newExtractorLink(
                     source = name,
                     name = name,
-                    url = vids.attr("src").split("?")[0],
+                    url = vid.attr("src").trim().split("?")[0].dropLast(1),
                     type = INFER_TYPE
                 ) {
                     this.referer = data
-                    this.quality = getIndexQuality(vids.attr("src"))
+                    this.quality = 720 //getIndexQuality(vid.attr("src"))
                 }
             )
-
         }
+
+
 
         return true
     }
