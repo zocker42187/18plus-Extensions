@@ -28,15 +28,14 @@ class Cam4Provider : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val responseList = app.get("$mainUrl${request.data}&page=$page")
             .parsedSafe<Response>()!!.users.map { user ->
-            LiveSearchResponse(
-                name = user.username,
-                url = "$mainUrl/${user.username}",
-                apiName = this@Cam4Provider.name,
-                type = TvType.Live,
-                posterUrl = user.snapshotImageLink,
-                lang = null
-            )
-        }
+                newLiveSearchResponse(
+                    name = user.username,
+                    url = "$mainUrl/${user.username}",
+                    type = TvType.Live,
+                ) {
+                    this.posterUrl = user.snapshotImageLink
+                }
+            }
         return newHomePageResponse(
             HomePageList(
                 request.name,
@@ -66,14 +65,14 @@ class Cam4Provider : MainAPI() {
             document.selectFirst("meta[property=og:description]")?.attr("content")?.trim()
 
 
-        return LiveStreamLoadResponse(
+        return newLiveStreamLoadResponse(
             name = title,
             url = url,
-            apiName = this.name,
             dataUrl = url,
-            posterUrl = poster,
-            plot = description,
-        )
+        ) {
+            this.posterUrl = poster
+            this.plot = description
+        }
     }
 
     override suspend fun loadLinks(

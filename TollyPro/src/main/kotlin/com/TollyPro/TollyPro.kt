@@ -86,7 +86,7 @@ class TollyPro : MainAPI() {
             val title =
                 it.selectFirst("div.title > a")!!.text().replace(Regex("\\(\\d{4}\\)"), "").trim()
             val href = getProperLink(it.selectFirst("div.title > a")!!.attr("href"))
-            val posterUrl = it.selectFirst("img")!!.attr("src").toString()
+            val posterUrl = it.selectFirst("img")!!.attr("src")
             newMovieSearchResponse(title, href, TvType.TvSeries) {
                 this.posterUrl = posterUrl
             }
@@ -110,10 +110,11 @@ class TollyPro : MainAPI() {
                     val type = it.attr("data-type")
                     val post = it.attr("data-post")
                     val nume = it.attr("data-nume")
-                    Episode(
+                    newEpisode(
                         LinkData(type, post,nume).toJson(),
-                        name,
-                    )
+                    ){
+                        this.name = name
+                    }
                 }
 
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
@@ -144,7 +145,7 @@ class TollyPro : MainAPI() {
         return true
         }
 
-    private fun Element.getImageAttr(): String? {
+    private fun Element.getImageAttr(): String {
         return when {
             this.hasAttr("data-src") -> this.attr("abs:data-src")
             this.hasAttr("data-lazy-src") -> this.attr("abs:data-lazy-src")

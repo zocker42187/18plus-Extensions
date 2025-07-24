@@ -1,20 +1,34 @@
 package com.KillerDogeEmpire
 
-import android.util.Log
-import org.jsoup.nodes.Element
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.ErrorLoadingException
+import com.lagradost.cloudstream3.HomePageList
+import com.lagradost.cloudstream3.HomePageResponse
+import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
-import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.MainAPI
+import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.SearchResponse
+import com.lagradost.cloudstream3.SubtitleFile
+import com.lagradost.cloudstream3.TvType
+import com.lagradost.cloudstream3.VPNStatus
+import com.lagradost.cloudstream3.amap
+import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.fixUrl
+import com.lagradost.cloudstream3.fixUrlNull
+import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.mvvm.logError
-import com.lagradost.cloudstream3.network.WebViewResolver
+import com.lagradost.cloudstream3.newHomePageResponse
+import com.lagradost.cloudstream3.newMovieLoadResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.M3u8Helper
 import com.lagradost.cloudstream3.utils.getQualityFromName
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.json.JSONObject
+import org.jsoup.nodes.Element
 
 class CornHubProvider : MainAPI() {
-    private val globalTvType = TvType.NSFW
     override var mainUrl = "https://www.pornhub.com"
     override var name = "CornHub"
     override val hasMainPage = true
@@ -44,19 +58,12 @@ class CornHubProvider : MainAPI() {
             val pagedLink = if (page > 0) categoryData + page else categoryData
             val soup = app.get(pagedLink, cookies = cookies).document
             val home = soup.select("div.sectionWrapper div.wrap").mapNotNull {
-                if (it == null) {
-                    return@mapNotNull null
-                }
                 val title = it.selectFirst("span.title a")?.text() ?: ""
                 val link = fixUrlNull(it.selectFirst("a")?.attr("href")) ?: return@mapNotNull null
                 val img = fetchImgUrl(it.selectFirst("img"))
-                MovieSearchResponse(
-                    name = title,
-                    url = link,
-                    apiName = this.name,
-                    type = globalTvType,
-                    posterUrl = img
-                )
+                newMovieSearchResponse(name = title, url = link) {
+                    this.posterUrl = img
+                }
             }
             if (home.isNotEmpty()) {
                 return newHomePageResponse(
@@ -77,19 +84,12 @@ class CornHubProvider : MainAPI() {
         val url = "$mainUrl/video/search?search=${query}"
         val document = app.get(url, cookies = cookies).document
         return document.select("div.sectionWrapper div.wrap").mapNotNull {
-            if (it == null) {
-                return@mapNotNull null
-            }
             val title = it.selectFirst("span.title a")?.text() ?: return@mapNotNull null
             val link = fixUrlNull(it.selectFirst("a")?.attr("href")) ?: return@mapNotNull null
             val image = fetchImgUrl(it.selectFirst("img"))
-            MovieSearchResponse(
-                name = title,
-                url = link,
-                apiName = this.name,
-                type = globalTvType,
-                posterUrl = image
-            )
+            newMovieSearchResponse(name = title, url = link) {
+                this.posterUrl = image
+            }
         }.distinctBy { it.url }
     }
 
@@ -99,7 +99,7 @@ class CornHubProvider : MainAPI() {
         val poster: String? = soup.selectFirst("div.video-wrapper .mainPlayerDiv img")?.attr("src")
             ?: soup.selectFirst("head meta[property=og:image]")?.attr("content")
         val tags = soup.select("div.categoriesWrapper a")
-            .map { it?.text()?.trim().toString().replace(", ", "") }
+            .map { it.text().trim().replace(", ", "") }
 
         val recommendations = soup.select("ul#recommendedVideos li.pcVideoListItem").map {
             val rTitle = it.selectFirst("div.phimage a")?.attr("title") ?: ""
@@ -107,9 +107,9 @@ class CornHubProvider : MainAPI() {
             val rPoster = fixUrl(
                 it.selectFirst("div.phimage img.js-videoThumb")?.attr("src").toString()
             )
-            MovieSearchResponse(
-                name = rTitle, apiName = this.name, url = rUrl, posterUrl = rPoster
-            )
+            newMovieSearchResponse(name = rTitle, url = rUrl) {
+                this.posterUrl = rPoster
+            }
         }
 
         val actors =
@@ -122,9 +122,9 @@ class CornHubProvider : MainAPI() {
             val rPoster = fixUrl(
                 it.selectFirst("div.phimage img.js-videoThumb")?.attr("src").toString()
             )
-            MovieSearchResponse(
-                name = rTitle, apiName = this.name, url = rUrl, posterUrl = rPoster
-            )
+            newMovieSearchResponse(name = rTitle, url = rUrl) {
+                this.posterUrl = rPoster
+            }
         }
 
         return newMovieLoadResponse(title, url, TvType.NSFW, url) {
@@ -148,34 +148,32 @@ class CornHubProvider : MainAPI() {
         val document = request.document
         val mediaDefinitions = JSONObject(
             document.selectXpath("//script[contains(text(),'flashvars')]").first()?.data()
-                ?.substringAfter("=")?.substringBefore(";")
+                ?.substringAfter("=")?.substringBefore(";").toString()
         ).getJSONArray("mediaDefinitions")
 
         for (i in 0 until mediaDefinitions.length()) {
-            if (mediaDefinitions.getJSONObject(i).optString("quality") != null) {
-                val quality = mediaDefinitions.getJSONObject(i).getString("quality")
-                val videoUrl = mediaDefinitions.getJSONObject(i).getString("videoUrl")
-                val extlinkList = mutableListOf<ExtractorLink>()
-                M3u8Helper().m3u8Generation(
-                    M3u8Helper.M3u8Stream(
-                        videoUrl
-                    ), true
-                ).apmap { stream ->
-                    extlinkList.add(
-                        newExtractorLink(
-                            source = name,
-                            name = this.name,
-                            url = stream.streamUrl,
-                            type = ExtractorLinkType.M3U8
-                        ) {
-                            referer = mainUrl
-                            this.quality = Regex("(\\d+)").find(quality ?: "")?.groupValues?.get(1)
-                                .let { getQualityFromName(it) }
-                        }
-                    )
-                }
-                extlinkList.forEach(callback)
+            val quality = mediaDefinitions.getJSONObject(i).getString("quality")
+            val videoUrl = mediaDefinitions.getJSONObject(i).getString("videoUrl")
+            val extlinkList = mutableListOf<ExtractorLink>()
+            M3u8Helper().m3u8Generation(
+                M3u8Helper.M3u8Stream(
+                    videoUrl
+                ), true
+            ).amap { stream ->
+                extlinkList.add(
+                    newExtractorLink(
+                        source = name,
+                        name = this.name,
+                        url = stream.streamUrl,
+                        type = ExtractorLinkType.M3U8
+                    ) {
+                        referer = mainUrl
+                        this.quality = Regex("(\\d+)").find(quality ?: "")?.groupValues?.get(1)
+                            .let { getQualityFromName(it) }
+                    }
+                )
             }
+            extlinkList.forEach(callback)
         }
 
         return true

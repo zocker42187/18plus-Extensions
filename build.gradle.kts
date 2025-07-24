@@ -78,7 +78,7 @@ subprojects {
         cloudstream("com.lagradost:cloudstream3:pre-release")
 
         // these dependencies can include any of those which are added by the app,
-        // but you dont need com include any of them if you dont need them
+        // but you dont need to include any of them if you dont need them
         // https://github.com/recloudstream/cloudstream/blob/master/app/build.gradle.kts
         implementation(kotlin("stdlib")) // adds standard kotlin features
         implementation("com.github.Blatzar:NiceHttp:0.4.11") // http library
@@ -91,7 +91,6 @@ subprojects {
         implementation("com.google.code.gson:gson:2.10")
     }
 }
-
-task<Delete>("clean") {
+tasks.register("clean"){
     delete(rootProject.layout.buildDirectory)
 }

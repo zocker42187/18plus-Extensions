@@ -40,14 +40,13 @@ class StripchatProvider : MainAPI() {
         val responseList =
             app.post(apiUrl, json = map).parsedSafe<Response>()!!.models.map { model ->
                 eList.add(model.id.toInt())
-                LiveSearchResponse(
+                newLiveSearchResponse(
                     name = model.username,
                     url = "$mainUrl/${model.username}",
-                    apiName = this@StripchatProvider.name,
                     type = TvType.Live,
-                    posterUrl = model.previewUrlThumbSmall,
-                    lang = null
-                )
+                ){
+                    this.posterUrl = model.previewUrlThumbSmall
+                }
             }
         if (excludeIdsMap[request.data].isNullOrEmpty()) {
             excludeIdsMap[request.data] = mutableListOf<Int>()
@@ -69,14 +68,13 @@ class StripchatProvider : MainAPI() {
         val title = this.select(".model-list-item-username").text()
         val href = mainUrl + this.select(".model-list-item-link").attr("href")
         val posterUrl = this.selectFirst(".image-background")?.attr("src")
-        return LiveSearchResponse(
+        return newLiveSearchResponse(
             name = title,
             url = href,
-            apiName = this@StripchatProvider.name,
             type = TvType.Live,
-            posterUrl = posterUrl,
-            lang = null
-        )
+        ){
+            this.posterUrl = posterUrl
+        }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
@@ -100,14 +98,14 @@ class StripchatProvider : MainAPI() {
             document.selectFirst("meta[property=og:description]")?.attr("content")?.trim()
 
 
-        return LiveStreamLoadResponse(
+        return newLiveStreamLoadResponse(
             name = title,
             url = url,
-            apiName = this.name,
             dataUrl = url,
-            posterUrl = poster,
-            plot = description,
-        )
+        ){
+            this.posterUrl = poster
+            this.plot = description
+        }
     }
 
     override suspend fun loadLinks(

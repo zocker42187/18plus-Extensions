@@ -25,15 +25,14 @@ class CamsodaProvider : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val responseList = app.get("$mainUrl${request.data}&p=$page")
             .parsedSafe<Response>()!!.userList.map { user ->
-            LiveSearchResponse(
-                name = user.username,
-                url = "$mainUrl/${user.username}",
-                apiName = this@CamsodaProvider.name,
-                type = TvType.Live,
-                posterUrl = if (user.thumbUrl.isNullOrEmpty()) user.offlinePictureUrl else user.thumbUrl,
-                lang = null
-            )
-        }
+                newLiveSearchResponse(
+                    name = user.username,
+                    url = "$mainUrl/${user.username}",
+                    type = TvType.Live,
+                ){
+                    this.posterUrl = if (user.thumbUrl.isEmpty()) user.offlinePictureUrl else user.thumbUrl
+                }
+            }
         return newHomePageResponse(
             HomePageList(
                 request.name,
@@ -52,15 +51,16 @@ class CamsodaProvider : MainAPI() {
         for (i in 0..3) {
             val results = app.get("$mainUrl/api/v1/browse/react/search/$query?p=$i&perPage=98")
                 .parsedSafe<Response>()!!.userList.map { user ->
-                LiveSearchResponse(
-                    name = user.username,
-                    url = "$mainUrl/${user.username}",
-                    apiName = this@CamsodaProvider.name,
-                    type = TvType.Live,
-                    posterUrl = if (user.offlinePictureUrl.isNullOrEmpty()) user.thumbUrl else user.offlinePictureUrl,
-                    lang = null
-                )
-            }
+                    newLiveSearchResponse(
+                        name = user.username,
+                        url = "$mainUrl/${user.username}",
+                        type = TvType.Live,
+                    )
+                    {
+                        this.posterUrl =
+                            if (user.offlinePictureUrl.isEmpty()) user.thumbUrl else user.offlinePictureUrl
+                    }
+                }
             if (!searchResponse.containsAll(results)) {
                 searchResponse.addAll(results)
             } else {
@@ -84,14 +84,14 @@ class CamsodaProvider : MainAPI() {
             document.selectFirst("meta[property=og:description]")?.attr("content")?.trim()
 
 
-        return LiveStreamLoadResponse(
+        return newLiveStreamLoadResponse(
             name = title,
             url = url,
-            apiName = this.name,
             dataUrl = url,
-            posterUrl = poster,
-            plot = description,
-        )
+        ) {
+            this.posterUrl = poster
+            this.plot = description
+        }
     }
 
     override suspend fun loadLinks(
@@ -103,7 +103,7 @@ class CamsodaProvider : MainAPI() {
         val doc = app.get(data).document
         val script =
             doc.select("script").find { item -> item.html().contains("window.__PRELOADED_STATE__") }
-        val json = JSONObject(script?.html()?.replace("window.__PRELOADED_STATE__ = ", ""))
+        val json = JSONObject(script?.html()?.replace("window.__PRELOADED_STATE__ = ", "").toString())
         val username = json.getJSONObject("chatPage").getString("username")
         val streamJson =
             json.getJSONObject("chatRoom").getJSONObject("roomByUsername").getJSONObject(username)

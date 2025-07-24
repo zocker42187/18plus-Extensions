@@ -24,7 +24,7 @@ class ChatrubateProvider : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        var offset: Int
+        val offset: Int
         if (page == 1) {
             offset = 0
         } else {
@@ -32,15 +32,10 @@ class ChatrubateProvider : MainAPI() {
         }
         val responseList = app.get("$mainUrl${request.data}&offset=$offset")
             .parsedSafe<Response>()!!.rooms.map { room ->
-            LiveSearchResponse(
-                name = room.username,
-                url = "$mainUrl/${room.username}",
-                apiName = this@ChatrubateProvider.name,
-                type = TvType.Live,
-                posterUrl = room.img,
-                lang = null
-            )
-        }
+                newLiveSearchResponse(name = room.username, url = "$mainUrl/${room.username}", type = TvType.Live,){
+                    this.posterUrl = room.img
+                }
+            }
         return newHomePageResponse(
             HomePageList(
                 request.name,
@@ -59,15 +54,14 @@ class ChatrubateProvider : MainAPI() {
             val results =
                 app.get("$mainUrl/api/ts/roomlist/room-list/?hashtags=$query&limit=90&offset=${i * 90}")
                     .parsedSafe<Response>()!!.rooms.map { room ->
-                    LiveSearchResponse(
-                        name = room.username,
-                        url = "$mainUrl/${room.username}",
-                        apiName = this@ChatrubateProvider.name,
-                        type = TvType.Live,
-                        posterUrl = room.img,
-                        lang = null
-                    )
-                }
+                        newLiveSearchResponse(
+                            name = room.username,
+                            url = "$mainUrl/${room.username}",
+                            type = TvType.Live,
+                        ) {
+                            this.posterUrl = room.img
+                        }
+                    }
             if (!searchResponse.containsAll(results)) {
                 searchResponse.addAll(results)
             } else {
@@ -92,14 +86,10 @@ class ChatrubateProvider : MainAPI() {
             document.selectFirst("meta[property=og:description]")?.attr("content")?.trim()
 
 
-        return LiveStreamLoadResponse(
-            name = title,
-            url = url,
-            apiName = this.name,
-            dataUrl = url,
-            posterUrl = poster,
-            plot = description,
-        )
+        return newLiveStreamLoadResponse(name = title, url = url, dataUrl = url,) {
+            this.posterUrl = poster
+            this.plot = description
+        }
     }
 
     override suspend fun loadLinks(
