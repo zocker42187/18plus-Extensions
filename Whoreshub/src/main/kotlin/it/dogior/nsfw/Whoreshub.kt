@@ -1,4 +1,4 @@
-package it.dogior.nsfw.megix
+package it.dogior.nsfw
 
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
