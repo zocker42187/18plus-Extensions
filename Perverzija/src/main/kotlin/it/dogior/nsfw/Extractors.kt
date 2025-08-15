@@ -1,4 +1,4 @@
-package it.dogior.nsfw.CXXX
+package it.dogior.nsfw
 
 import com.lagradost.api.Log
 import com.lagradost.cloudstream3.app
