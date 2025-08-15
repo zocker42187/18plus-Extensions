@@ -86,10 +86,23 @@ class Eporner : MainAPI() {
         val description =
             document.selectFirst("meta[property=og:description]")?.attr("content")?.trim()
 
+        val relatedDiv = document.select("#relateddiv")
+        val relatedVideos = relatedDiv.select(".mb").map {
+            val a = it.select(".mbcontent > a")
+            val img = a.select("img")
+            val relatedPoster = img.attr("data-src")
+            val relatedTitle = img.attr("alt")
+            val relatedLink = a.attr("href")
+            newMovieSearchResponse(relatedTitle, relatedLink){
+                this.posterUrl = relatedPoster
+            }
+        }
+
 
         return newMovieLoadResponse(title, url, TvType.NSFW, url) {
             this.posterUrl = poster
             this.plot = description
+            this.recommendations = relatedVideos
         }
     }
 
