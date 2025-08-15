@@ -1,4 +1,4 @@
-package it.dogior.nsfw.CXXX
+package it.dogior.nsfw
 
 import com.lagradost.api.Log
 import org.jsoup.nodes.Element
@@ -6,7 +6,6 @@ import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
-import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 class FullPorner : MainAPI() {
@@ -83,7 +82,7 @@ class FullPorner : MainAPI() {
                 ?.text()?.trim().toString()
         val tags =
             document.select("div.video-block div.single-video-left div.single-video-title p.tag-link span a")
-                .map { it.text() }
+                .map { it.text().removePrefix("#") }
         val description =
             document.selectFirst("div.video-block div.single-video-left div.single-video-title h2")
                 ?.text()?.trim().toString()
