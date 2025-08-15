@@ -1,4 +1,4 @@
-package it.dogior.nsfw.coxju
+package it.dogior.nsfw
 
 import android.util.Log
 import org.jsoup.nodes.Element
@@ -18,7 +18,10 @@ class Spankbang : MainAPI() {
     override val supportedTypes = setOf(TvType.NSFW)
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/trending_videos/" to "New Videos",
+        "${mainUrl}/trending_videos/" to "Trending Videos",
+        "${mainUrl}/new_videos/" to "New Videos",
+        "${mainUrl}/most_popular/?p=m" to "Most Popular Videos",
+        "${mainUrl}/s/exclusive/" to "Exclusive Videos",
         "${mainUrl}/7r/channel/adult+time/" to "Adult Time ",
         "${mainUrl}/ce/channel/bratty+milf/" to "Bratty MILF",
         "${mainUrl}/cf/channel/bratty+sis/" to "Bratty Sis",
@@ -44,7 +47,8 @@ class Spankbang : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get(request.data + page).document
+        val pagedUrl = request.data.split("?").joinToString("$page/?")
+        val document = app.get(pagedUrl).document
         var videos = document.select("div.video-item")
         if (videos.isEmpty()) videos = document.select("div.mb-6").select(".js-video-item")
         val home = videos.mapNotNull { it.toSearchResult() }

@@ -1,9 +1,9 @@
 version = 1
 
 cloudstream {
-    authors     = listOf("HindiProvider")
+    authors     = listOf("HindiProvider", "doGior")
     language    = "en"
-    description = "Spankbang"
+    description = "SpankBang is the hottest free porn site in the world! Cum like never before and explore millions of fresh and free porn videos! Get lit on SpankBang!"
 
     /**
      * Status int as the following:
