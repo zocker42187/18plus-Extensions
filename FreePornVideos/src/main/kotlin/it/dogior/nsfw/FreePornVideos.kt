@@ -1,4 +1,4 @@
-package it.dogior.nsfw.CXXX
+package it.dogior.nsfw
 
 //import android.util.Log
 import com.lagradost.api.Log
@@ -18,14 +18,17 @@ class FreePornVideos : MainAPI() {
 
     override val mainPage = mainPageOf(
         "most-popular/week" to "Most Popular",
-        "networks/brazzers-com" to "Brazzers",
-        "networks/mylf-com" to "MYLF",
-        "networks/brazzers-com" to "Brazzers",
-        "networks/bangbros" to "BangBros",
         "networks/adult-time" to "Adult Time",
-        "networks/rk-com" to "Reality Kings",
+        "networks/bangbros" to "BangBros",
+        "networks/brazzers-com" to "Brazzers",
+        "sites/deeper" to "Deeper",
+        "networks/dorcel-club" to "Dorcel Club",
         "categories/jav-uncensored" to "Jav",
-        "networks/mom-lover" to "MILF"
+        "networks/nubiles-porn-com" to "Nubiles Porn",
+        "networks/rk-com" to "Reality Kings",
+        "networks/teamskeet-com" to "Team Skeet",
+        "sites/vixen" to "Vixen",
+        "networks/wowporn" to "WowPorn",
 
     )
 
