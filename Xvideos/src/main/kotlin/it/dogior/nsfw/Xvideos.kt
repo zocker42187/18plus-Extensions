@@ -1,13 +1,11 @@
-package it.dogior.nsfw.jacekun
+package it.dogior.nsfw
 
-import android.util.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.utils.*
-import com.lagradost.cloudstream3.utils.AppUtils.toJson
 
 
-class XvideosProvider : MainAPI() {
+class Xvideos : MainAPI() {
     private val globalTvType = TvType.NSFW
 
     override var mainUrl = "https://www.xvideos.com"
