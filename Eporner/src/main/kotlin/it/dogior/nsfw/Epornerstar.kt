@@ -7,9 +7,9 @@ import com.lagradost.cloudstream3.network.WebViewResolver
 import com.lagradost.cloudstream3.utils.*
 import org.json.JSONObject
 
-class Eporner : MainAPI() {
+class Epornerstar : MainAPI() {
     override var mainUrl = "https://www.eporner.com"
-    override var name = "Eporner"
+    override var name = "Epornerstar"
     override val hasMainPage = true
     override var lang = "en"
     override val hasDownloadSupport = true
@@ -20,14 +20,29 @@ class Eporner : MainAPI() {
     override var sequentialMainPageDelay = 200L
     override var sequentialMainPageScrollDelay = 200L
 
-
     override val mainPage = mainPageOf(
-        "best-videos" to "Best Videos",
-        "top-rated" to "Top Rated",
-        "most-viewed" to "Most Viewed",
-        "cat/hd-1080p" to "1080 Porn",
-        "cat/4k-porn" to "4K Porn",
-        "cat/60fps" to "60FPS",
+        "pornstar/candy-love-C0RYS" to "Candy Love",
+        "pornstar/molly-redwolf" to "MollyRedWolf",
+        "pornstar/little-reislin-1yzCC" to "Reislin",
+        "pornstar/eliza-ibarra" to "Eliza Ibarra",
+        "pornstar/stacy-cruz" to "Stacy Cruz",
+        "pornstar/ellie-nova-dKppY" to "Ellie Nova",
+        "pornstar/rae-lil-black-woUfN" to "Rae Lil Black",
+        "pornstar/jia-lissa-IpgNW" to "Jia Lissa",
+        "pornstar/maria-kazi-0FbT8" to "Maria Kazi",
+        "pornstar/eva-elfie-Ojgho" to "Eva Elfie",
+        "pornstar/sweetie-fox-Y3xBY" to "Sweetie Fox",
+        "pornstar/sonya-blaze" to "Sonya Blaze",
+        "pornstar/holly-michaels" to "Holly Michaels",
+        "pornstar/liya-silver-ajRED" to "Liya Silver",
+        "pornstar/autumn-falls-CKYp3" to "Autumn Falls",
+        "pornstar/martina-smeraldi-cyVFA-h1ylt" to "Martina Smeraldi",
+        "pornstar/mia-malkova-oPgtJ" to "Mia Malkova",
+        "pornstar/busty-clary" to "Clary",
+        "pornstar/valentina-nappi-5RAa3" to "Valentina Nappi",
+        "pornstar/lena-paul-v5WPE-xmrhw" to "Lena Paul",
+        "pornstar/kendra-sunderland" to "Kendra Sunderland",
+        "pornstar/madison-ivy" to "Madison Ivy",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -57,7 +72,7 @@ class Eporner : MainAPI() {
         }
     }
 
-    override suspend fun search(query: String): List<SearchResponse> {
+    /*override suspend fun search(query: String): List<SearchResponse> {
         val searchResponse = mutableListOf<SearchResponse>()
 
         for (i in 1..10) {
@@ -75,7 +90,7 @@ class Eporner : MainAPI() {
         }
 
         return searchResponse
-    }
+    }*/
 
     override suspend fun load(url: String): LoadResponse {
         val document = app.get(url).document
