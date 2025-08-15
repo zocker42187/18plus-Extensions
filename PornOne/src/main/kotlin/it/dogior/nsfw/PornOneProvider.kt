@@ -1,4 +1,4 @@
-package it.dogior.nsfw.PornOne
+package it.dogior.nsfw
 
 import com.google.gson.Gson
 import com.lagradost.api.Log
@@ -76,7 +76,7 @@ class PornOneProvider : MainAPI() {
         val searchResponse = mutableListOf<SearchResponse>()
 
         for (i in 1..7) {
-            var document = app.get("$mainUrl/search?q=$query&page=$i", timeout = 30).document
+            val document = app.get("$mainUrl/search?q=$query&page=$i", timeout = 30).document
 
             //val document = app.get("${mainUrl}/page/$i/?s=$queassry").document
 
