@@ -27,6 +27,7 @@ class Epornerstar : MainAPI() {
         "pornstar/eliza-ibarra" to "Eliza Ibarra",
         "pornstar/stacy-cruz" to "Stacy Cruz",
         "pornstar/ellie-nova-dKppY" to "Ellie Nova",
+        "pornstar/hazel-moore" to "Hazel Moore",
         "pornstar/rae-lil-black-woUfN" to "Rae Lil Black",
         "pornstar/jia-lissa-IpgNW" to "Jia Lissa",
         "pornstar/maria-kazi-0FbT8" to "Maria Kazi",
