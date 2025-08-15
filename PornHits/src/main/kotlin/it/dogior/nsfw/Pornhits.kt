@@ -1,4 +1,4 @@
-package it.dogior.nsfw.KillerDogeEmpire
+package it.dogior.nsfw
 
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
@@ -61,6 +61,7 @@ class Pornhits : MainAPI() {
         val title = this.selectFirst("div.item-info h2.title")?.text() ?: return null
         val href = fixUrl(this.selectFirst("a")!!.attr("href"))
         val posterUrl = fixUrlNull(this.select("a div.img img").attr("data-original"))
+            ?: fixUrlNull(this.select("a div.img img").attr("src"))
         return newMovieSearchResponse(title, href, TvType.Movie) {
             this.posterUrl = posterUrl
         }
@@ -142,7 +143,6 @@ class Pornhits : MainAPI() {
         for (i in 0 until videos.length()) {
             val video = videos.getJSONObject(i)
             var quality = Qualities.Unknown.value
-            var isM3u8 = false
             if (video.getString("format").contains("lq")) {
                 quality = Qualities.P480.value
             }
