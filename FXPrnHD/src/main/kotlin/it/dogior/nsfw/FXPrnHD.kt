@@ -1,4 +1,4 @@
-package it.dogior.nsfw.CXXX
+package it.dogior.nsfw
 
 import android.util.Log
 import com.lagradost.cloudstream3.*
@@ -18,13 +18,20 @@ class Fxprnhd : MainAPI() {
     override val supportedTypes = setOf(TvType.NSFW)
 
     override val mainPage = mainPageOf(
+        "$mainUrl/c/babes" to "Babes",
         "$mainUrl/c/bangbros" to "Bang Bros",
+        "$mainUrl/c/brattysis" to "Bratty Sis",
         "$mainUrl/c/brazzers" to "Brazzers",
+        "$mainUrl/c/digitalplayground" to "Digital Playground",
+        "$mainUrl/c/naughtyamerica" to "Naughty America",
+        "$mainUrl/c/newsensations" to "New Sensations",
+        "$mainUrl/c/nfbusty" to "NF Busty",
+        "$mainUrl/c/nubilefilms" to "Nubile Films",
+        "$mainUrl/c/onlyfans" to "OnlyFans",
+        "$mainUrl/c/puretaboo" to "Pure Taboo",
         "$mainUrl/c/realitykings" to "Reality Kings",
-        "$mainUrl/c/blacked" to "Blacked",
-        "$mainUrl/c/pervmom" to "Pervmom",
-
-        )
+        "$mainUrl/c/vixen" to "Vixen",
+    )
 
     override suspend fun getMainPage(
         page: Int,
