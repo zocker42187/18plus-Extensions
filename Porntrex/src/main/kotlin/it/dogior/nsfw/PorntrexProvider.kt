@@ -1,4 +1,4 @@
-package it.dogior.nsfw.megix
+package it.dogior.nsfw
 
 import android.content.Context
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin

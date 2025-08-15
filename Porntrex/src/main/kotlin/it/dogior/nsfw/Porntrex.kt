@@ -1,4 +1,4 @@
-package it.dogior.nsfw.megix
+package it.dogior.nsfw
 
 import com.lagradost.api.Log
 import com.lagradost.cloudstream3.HomePageList
@@ -18,11 +18,9 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.INFER_TYPE
 import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.newExtractorLink
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONObject
 import org.jsoup.internal.StringUtil
 import org.jsoup.nodes.Element
@@ -45,6 +43,7 @@ class Porntrex : MainAPI() {
         "top-rated/monthly/?mode=async&function=get_block&block_id=list_videos_common_videos_list_norm&sort_by=rating_month&from4=" to "Top rated monthly",
         "most-popular/?mode=async&function=get_block&block_id=list_videos_common_videos_list_norm&sort_by=video_viewed&from4=" to "Most popular all time",
         "top-rated/?mode=async&function=get_block&block_id=list_videos_common_videos_list_norm&sort_by=rating&from4=" to "Top rated all time",
+        "categories/4k-porn/?mode=async&function=get_block&block_id=list_videos_common_videos_list_norm&sort_by=post_date&from4=" to "4K Porn",
     )
 
     override suspend fun getMainPage(
@@ -122,7 +121,7 @@ class Porntrex : MainAPI() {
         val poster =
             fixUrlNull(jsonObject.getString("preview_url"))
 
-        val tags = jsonObject.getString("video_tags").split(", ").map { it.replace("-", "") }
+        val tags = jsonObject.getString("video_tags").split(", ").map { it.replace("-", "").removePrefix("#") }
             .filter { it.isNotBlank() && !StringUtil.isNumeric(it) }
         val description = jsonObject.getString("video_title")
 
@@ -174,18 +173,17 @@ class Porntrex : MainAPI() {
             if (url == "") {
                 continue
             }
-            Log.d("BANANA", url)
             extlinkList.add(
                 newExtractorLink(
                     name,
                     name,
-                    fixUrl(url),
+                    url,
                     type = INFER_TYPE
                 ) {
-                    this.referer = mainUrl
+//                    this.referer = mainUrl
                     this.quality = Regex("(\\d+.)").find(quality)?.groupValues?.get(1)
                         .let { getQualityFromName(it) }
-                    this.headers = mapOf("Host" to mainUrl.toHttpUrl().host)
+                    this.headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:141.0) Gecko/20100101 Firefox/141.0")
                 }
 
             )
