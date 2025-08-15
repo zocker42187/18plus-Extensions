@@ -1,4 +1,4 @@
-package it.dogior.nsfw.Chatrubate
+package it.dogior.nsfw
 
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
 import com.lagradost.cloudstream3.plugins.Plugin

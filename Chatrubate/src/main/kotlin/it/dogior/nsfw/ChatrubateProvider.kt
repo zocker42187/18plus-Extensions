@@ -1,4 +1,4 @@
-package it.dogior.nsfw.Chatrubate
+package it.dogior.nsfw
 
 
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -17,9 +17,9 @@ class ChatrubateProvider : MainAPI() {
 
     override val mainPage = mainPageOf(
         "/api/ts/roomlist/room-list/?limit=90" to "Featured",
-        "/api/ts/roomlist/room-list/?genders=m&limit=90" to "Male",
         "/api/ts/roomlist/room-list/?genders=f&limit=90" to "Female",
         "/api/ts/roomlist/room-list/?genders=c&limit=90" to "Couples",
+        "/api/ts/roomlist/room-list/?genders=m&limit=90" to "Male",
         "/api/ts/roomlist/room-list/?genders=t&limit=90" to "Trans",
     )
 
@@ -32,15 +32,20 @@ class ChatrubateProvider : MainAPI() {
         }
         val responseList = app.get("$mainUrl${request.data}&offset=$offset")
             .parsedSafe<Response>()!!.rooms.map { room ->
-            LiveSearchResponse(
-                name = room.username,
-                url = "$mainUrl/${room.username}",
-                apiName = this@ChatrubateProvider.name,
-                type = TvType.Live,
-                posterUrl = room.img,
-                lang = null
-            )
-        }
+                newLiveSearchResponse(
+                    name = room.username,
+                    url = "$mainUrl/${room.username}",
+                    type = TvType.Live,
+                ) { this.posterUrl = room.img }
+                /*LiveSearchResponse(
+                    name = room.username,
+                    url = "$mainUrl/${room.username}",
+                    apiName = this@ChatrubateProvider.name,
+                    type = TvType.Live,
+                    posterUrl = room.img,
+                    lang = null
+                )*/
+            }
         return newHomePageResponse(
             HomePageList(
                 request.name,
@@ -59,15 +64,12 @@ class ChatrubateProvider : MainAPI() {
             val results =
                 app.get("$mainUrl/api/ts/roomlist/room-list/?hashtags=$query&limit=90&offset=${i * 90}")
                     .parsedSafe<Response>()!!.rooms.map { room ->
-                    LiveSearchResponse(
-                        name = room.username,
-                        url = "$mainUrl/${room.username}",
-                        apiName = this@ChatrubateProvider.name,
-                        type = TvType.Live,
-                        posterUrl = room.img,
-                        lang = null
-                    )
-                }
+                        newLiveSearchResponse(
+                            name = room.username,
+                            url = "$mainUrl/${room.username}",
+                            type = TvType.Live,
+                        ) { this.posterUrl = room.img }
+                    }
             if (!searchResponse.containsAll(results)) {
                 searchResponse.addAll(results)
             } else {
@@ -92,14 +94,22 @@ class ChatrubateProvider : MainAPI() {
             document.selectFirst("meta[property=og:description]")?.attr("content")?.trim()
 
 
-        return LiveStreamLoadResponse(
+        return newLiveStreamLoadResponse(
+            name = title,
+            url = url,
+            dataUrl = url
+        ) {
+            this.posterUrl = poster
+            this.plot = description
+        }
+        /*LiveStreamLoadResponse(
             name = title,
             url = url,
             apiName = this.name,
             dataUrl = url,
             posterUrl = poster,
             plot = description,
-        )
+        )*/
     }
 
     override suspend fun loadLinks(
