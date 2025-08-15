@@ -1,4 +1,4 @@
-package it.dogior.nsfw.Xtapes
+package it.dogior.nsfw
 
 import com.lagradost.api.Log
 import org.jsoup.nodes.Element
@@ -13,21 +13,23 @@ class Xtapes : MainAPI() {
     override val hasDownloadSupport = true
     override val supportedTypes = setOf(TvType.NSFW)
     override val vpnStatus = VPNStatus.MightBeNeeded
+    override var sequentialMainPage = true
+    override var sequentialMainPageDelay = 2L
+    override var sequentialMainPageScrollDelay = 1L
 
     override val mainPage = mainPageOf(
         "porn-movies-hd" to "Latest",
-        "765712" to "Blacked",
-        "63400" to "Jules Jordan",
-        "763817" to "MYLF",
-        "6518746" to "Naughty America",
-        "401786" to "New Sensations",
+        "876420" to "HardX",
+        "211059" to "Jav",
+        "6512687" to "Naughty America",
+        "478601" to "New Sensations",
         "498759" to "Nubile Films",
-        "420064" to "Nubiles Porn",
-        "442623" to "Onlyfans",
+        "428692" to "Nubiles Porn",
+        "485723" to "Onlyfans",
         "435568" to "PassionHD",
-        "784626" to "PornFidelity",
-        "729244" to "Sex Art",
-        "299653" to "Team Skeet",
+        "784920" to "PornFidelity",
+        "729235" to "Sex Art",
+        "412862" to "Team Skeet",
         "735415" to "Tiny4K",
         "3146" to "UltraFilms",
         "396351" to "Vixen",

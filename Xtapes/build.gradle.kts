@@ -1,11 +1,11 @@
 // use an integer for version numbers
-version = 7
+version = 1
 
 
 cloudstream {
     // All of these properties are optional, you can safely remove them
 
-    description = "Xtapes"
+    description = "XTAPES.IN - The Number One Porn Tube For Best 4K and Full HD Porn Videos. Watch, Download & Share XXX scenes and Movies every day for free! Featuring worlds best Pornstars & cam models of the Adult Industry."
     language    = "en"
     authors = listOf("HindiProviders")
 

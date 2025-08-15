@@ -1,4 +1,4 @@
-package it.dogior.nsfw.Xtapes
+package it.dogior.nsfw
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.api.Log
