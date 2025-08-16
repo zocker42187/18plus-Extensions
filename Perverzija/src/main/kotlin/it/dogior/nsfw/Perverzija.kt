@@ -30,13 +30,13 @@ class Perverzija : MainAPI() {
 
     private val cfInterceptor = CloudflareKiller()
 
-    override var sequentialMainPage = true
-    override var sequentialMainPageDelay = 100L
-    override var sequentialMainPageScrollDelay = 10L
+//    override var sequentialMainPage = true
+//    override var sequentialMainPageDelay = 100L
+//    override var sequentialMainPageScrollDelay = 10L
 
     override val mainPage = mainPageOf(
         "$mainUrl/page/%d/" to "Home",
-        "$mainUrl/studio/page/%d/?orderby=like" to "Most Liked",
+//        "$mainUrl/studio/page/%d/?orderby=like" to "Most Liked",
         "$mainUrl/studio/page/%d/?orderby=view" to "Most Viewed",
         "$mainUrl/featured-scenes/page/%d/?orderby=date" to "Featured",
         "$mainUrl/featured-scenes/page/%d/?orderby=view" to "Featured Most Viewed",
@@ -93,7 +93,7 @@ class Perverzija : MainAPI() {
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val document = app.get(request.data.format(page), interceptor = cfInterceptor).document
+        val document = app.get(request.data.format(page), interceptor = cfInterceptor, timeout = 15).document
         val home = document.select("div.row div div.post").mapNotNull {
             it.toSearchResult()
         }
