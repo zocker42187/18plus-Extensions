@@ -31,7 +31,7 @@ class Perverzija : MainAPI() {
     private val cfInterceptor = CloudflareKiller()
 
     override var sequentialMainPage = true
-    override var sequentialMainPageDelay = 20L
+    override var sequentialMainPageDelay = 100L
     override var sequentialMainPageScrollDelay = 10L
 
     override val mainPage = mainPageOf(
