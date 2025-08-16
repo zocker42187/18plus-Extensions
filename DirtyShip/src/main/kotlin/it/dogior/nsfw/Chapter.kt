@@ -1,4 +1,4 @@
-package com.kraptor
+package it.dogior.nsfw
 
 import android.app.Dialog
 import android.os.Bundle
