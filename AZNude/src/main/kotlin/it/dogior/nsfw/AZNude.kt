@@ -28,7 +28,14 @@ class AZNude : MainAPI() {
         val document = app.get("${request.data}$page.html").document
         val home = document.select("div.col-lg-3 a.video").mapNotNull { it.toMainPageResult() }
 
-        return newHomePageResponse(request.name, home)
+        return newHomePageResponse(
+            list = HomePageList(
+                name = request.name,
+                list = home,
+                isHorizontalImages = true
+            ),
+            hasNext = true
+        )
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
