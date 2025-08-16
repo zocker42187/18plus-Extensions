@@ -3,11 +3,12 @@ package it.dogior.nsfw
 import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.LoadResponse.Companion.addDuration
 import com.lagradost.cloudstream3.network.WebViewResolver
 import com.lagradost.cloudstream3.utils.*
 import org.json.JSONObject
 
-class Eporner : MainAPI() {
+open class Eporner : MainAPI() {
     override var mainUrl = "https://www.eporner.com"
     override var name = "Eporner"
     override val hasMainPage = true
@@ -32,7 +33,6 @@ class Eporner : MainAPI() {
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val document = app.get("$mainUrl/${request.data}/$page/").document
-//        Log.d("EPORNER", document.toString())
         val home = document.select("div.mb.hdy").mapNotNull { it.toSearchResult() }
 
         return newHomePageResponse(
@@ -83,8 +83,13 @@ class Eporner : MainAPI() {
         val title =
             document.selectFirst("meta[property=og:title]")?.attr("content")?.trim().toString()
         val poster = fixUrlNull(document.selectFirst("[property='og:image']")?.attr("content"))
-        val description =
-            document.selectFirst("meta[property=og:description]")?.attr("content")?.trim()
+        val videoDescription =
+            document.selectFirst("div.video-description")?.text()?.trim()
+        val pageDescription = document.select("meta[property=og:description]")
+            .attr("content").trim().removeSuffix(" Eporner is the largest hd porn source.")
+        val qualities = "Available in" + pageDescription.substringAfter("available in")
+        val duration = document.select("span.vid-length").text().trim()
+        val description = videoDescription?.let { "$it. $qualities" } ?: pageDescription
 
         val relatedDiv = document.select("#relateddiv")
         val relatedVideos = relatedDiv.select(".mb").map {
@@ -93,7 +98,7 @@ class Eporner : MainAPI() {
             val relatedPoster = img.attr("data-src")
             val relatedTitle = img.attr("alt")
             val relatedLink = a.attr("href")
-            newMovieSearchResponse(relatedTitle, relatedLink){
+            newMovieSearchResponse(relatedTitle, relatedLink) {
                 this.posterUrl = relatedPoster
             }
         }
@@ -103,6 +108,7 @@ class Eporner : MainAPI() {
             this.posterUrl = poster
             this.plot = description
             this.recommendations = relatedVideos
+            addDuration(duration)
         }
     }
 
