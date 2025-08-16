@@ -5,8 +5,8 @@ version = 1
 cloudstream {
     // All of these properties are optional, you can safely remove them
 
-    description = "Pornhub"
-    authors = listOf("Stormunblessed", "Jace", "KillerDogeEmpire", "Hexated", "Coxju")
+    description = "Welcome to Pornhub.com, home of the best hardcore free porn videos"
+    authors = listOf("Stormunblessed", "Jace", "KillerDogeEmpire", "Hexated", "Coxju", "doGior")
 
     /**
     * Status int as the following:
@@ -24,5 +24,17 @@ cloudstream {
 
     iconUrl = "https://www.google.com/s2/favicons?domain=cornhub.website&sz=%size%"
 
+    requiresResources = true
     language = "en"
+}
+
+android {
+    buildFeatures {
+        buildConfig = true
+        viewBinding = true
+    }
+}
+
+dependencies {
+    implementation("com.google.android.material:material:1.12.0")
 }

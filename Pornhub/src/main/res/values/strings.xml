@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="header_tw">PornHub settings</string>
+    <string name="omega_switch">Enable Omega</string>
+    <string name="addSection_tw">Add model or channel page</string>
+    <string name="add_url_hint">URL</string>
+</resources>
