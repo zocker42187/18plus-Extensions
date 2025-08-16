@@ -21,7 +21,7 @@ class PornhubPlugin : Plugin() {
 
         val isOmegaEnabled = sharedPref?.getBoolean("omega", true) ?: true
         if (isOmegaEnabled) {
-            val defaultSection = Triple("", "Add sections in the setting", 1L).toJson()
+            val defaultSection = Triple("", "Add your sections in the settings", 1L).toJson()
             val sectionsJson = (sharedPref?.getStringSet("sections", setOf(defaultSection))
                 ?: setOf(defaultSection)).map { parseJson<Triple<String, String, Long>>(it) }
             val sections = sectionsJson.sortedBy { it.third }.map {
