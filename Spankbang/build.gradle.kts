@@ -14,5 +14,5 @@ cloudstream {
     **/
     status  = 1 // will be 3 if unspecified
     tvTypes = listOf("NSFW")
-    iconUrl = "https://logos-world.net/wp-content/uploads/2023/01/SpankBang-Logo.png"
+    iconUrl = "https://spankbang.com/static/desktop/Images/icons/v3/apple-touch-icon.png"
 }

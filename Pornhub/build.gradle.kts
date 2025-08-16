@@ -22,7 +22,7 @@ cloudstream {
     // https://recloudstream.github.io/cloudstream/html/app/com.lagradost.cloudstream3/-tv-type/index.html
     tvTypes = listOf("NSFW")
 
-    iconUrl = "https://www.google.com/s2/favicons?domain=cornhub.website&sz=%size%"
+    iconUrl = "https://ei.phncdn.com/www-static/favicon.ico?cache=2025081403"
 
     requiresResources = true
     language = "en"
