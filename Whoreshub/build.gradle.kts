@@ -21,5 +21,5 @@ cloudstream {
     // You can find a list of avaliable types here:
     // https://recloudstream.github.io/cloudstream/html/app/com.lagradost.cloudstream3/-tv-type/index.html
     tvTypes = listOf("NSFW")
-    iconUrl = "https://findbestporno.com/public/uploads/image/2021/8/WhoresHub.jpg"
+    iconUrl = "https://wh.cdntrex.com/favicon.ico"
 }

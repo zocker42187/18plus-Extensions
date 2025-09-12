@@ -1,9 +1,9 @@
 version = 1
 
 cloudstream {
-    authors     = listOf("HindiProvider")
+    authors     = listOf("HindiProvider", "doGior")
     language    = "en"
-    description = "Spankbang"
+    description = "SpankBang is the hottest free porn site in the world! Cum like never before and explore millions of fresh and free porn videos! Get lit on SpankBang!"
 
     /**
      * Status int as the following:
@@ -14,5 +14,5 @@ cloudstream {
     **/
     status  = 1 // will be 3 if unspecified
     tvTypes = listOf("NSFW")
-    iconUrl = "https://logos-world.net/wp-content/uploads/2023/01/SpankBang-Logo.png"
+    iconUrl = "https://spankbang.com/static/desktop/Images/icons/v3/apple-touch-icon.png"
 }
