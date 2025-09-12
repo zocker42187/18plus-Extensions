@@ -1,4 +1,4 @@
-version = 5
+version = 1
 
 cloudstream {
     authors     = listOf("luck731")
@@ -12,7 +12,7 @@ cloudstream {
      * 2: Slow
      * 3: Beta only
     **/
-    status  = 1 // will be 3 if unspecified
+    status  = 0 // will be 3 if unspecified
     tvTypes = listOf("NSFW")
     iconUrl = "https://imgur.com/download/bF7P7os/"
 }

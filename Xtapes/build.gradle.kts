@@ -1,11 +1,11 @@
 // use an integer for version numbers
-version = 7
+version = 1
 
 
 cloudstream {
     // All of these properties are optional, you can safely remove them
 
-    description = "Xtapes"
+    description = "XTAPES.IN - The Number One Porn Tube For Best 4K and Full HD Porn Videos. Watch, Download & Share XXX scenes and Movies every day for free! Featuring worlds best Pornstars & cam models of the Adult Industry."
     language    = "en"
     authors = listOf("HindiProviders")
 
@@ -22,5 +22,5 @@ cloudstream {
     // You can find a list of avaliable types here:
     // https://recloudstream.github.io/cloudstream/html/app/com.lagradost.cloudstream3/-tv-type/index.html
     tvTypes = listOf("NSFW")
-    iconUrl = "https://www.google.com/s2/favicons?domain=https://xtapes.to&sz=%size%"
+    iconUrl = "https://xtapes.in/wp-content/uploads/2025/05/cropped-xtapes-logo-transparent2-5-192x192.png"
 }

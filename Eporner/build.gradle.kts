@@ -1,9 +1,9 @@
-version = 6
+version = 1
 
 cloudstream {
     authors     = listOf("HindiProvider, megix")
     language    = "en"
-    description = "Eporner"
+    description = "Watch Full HD Porn Videos for free. We have over 4,627,040 full length Hardcore HD Sex Movies in 720p, 1080p and 4K that you can watch online or download."
 
     /**
      * Status int as the following:
