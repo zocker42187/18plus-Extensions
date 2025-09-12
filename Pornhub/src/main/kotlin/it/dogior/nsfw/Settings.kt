@@ -22,7 +22,7 @@ import androidx.core.content.res.ResourcesCompat
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
-import com.RowdyAvocado.BuildConfig
+import io.github.zocker42187.BuildConfig
 import com.lagradost.api.Log
 import com.lagradost.cloudstream3.CommonActivity.showToast
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
