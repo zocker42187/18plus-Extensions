@@ -1,5 +1,6 @@
 package it.dogior.nsfw
 
+import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.APIHolder.capitalize
 import com.lagradost.cloudstream3.extractors.MixDropAg
@@ -22,6 +23,15 @@ class Archivebate : MainAPI() {
     override val supportedTypes = setOf(TvType.NSFW)
     override val vpnStatus = VPNStatus.MightBeNeeded
     override val hasQuickSearch = true
+    override var sequentialMainPage = true
+
+    override val mainPage = mainPageOf(
+        "$mainUrl/" to "Latest Videos",
+        "$mainUrl/platform/Y2hhdHVyYmF0ZQ==" to "Chaturbate",
+        "$mainUrl/platform/Y2Ftc29kYQ==" to "Camsoda",
+        "$mainUrl/platform/c3RyaXBjaGF0" to "Stripchat",
+        "$mainUrl/platform/Y2FtNA==" to "Cam4",
+    )
 
     companion object {
         const val URL = "https://archivebate.com"
@@ -77,11 +87,13 @@ class Archivebate : MainAPI() {
     }
 
 
-    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val data = setup()
+    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse? {
+        val action = if (request.name == "Latest Videos") "loadVideos" else "load_platform_videos"
+        val data = setup("${request.data}?page=$page", action)
 
+        val url = if (request.name == "Latest Videos") "$mainUrl/livewire/message/home-videos" else "$mainUrl/livewire/message/filter.platform"
         val resp = app.post(
-            "$mainUrl/livewire/message/home-videos",
+            url,
             cookies = cookies,
             headers = headers,
             requestBody = data
@@ -89,7 +101,13 @@ class Archivebate : MainAPI() {
         val body = resp.body.string()
 //        Log.d("Archivebate", "Code: ${resp.code}")
 //        Log.d("Archivebate", body)
-        val html = JSONObject(body).getJSONObject("effects").getString("html")
+        val html = try {
+            JSONObject(body).getJSONObject("effects").getString("html")
+        } catch (e: Exception){
+            Log.e("Archivebate", "Error parsing the ${request.name} section")
+            Log.e("Archivebate", e.message ?: "")
+            return null
+        }
         val doc = Jsoup.parse(html)
         val items = doc.select("section.video_item").mapNotNull {
             val link = it.selectFirst("a")?.attr("href") ?: return@mapNotNull null
@@ -102,9 +120,14 @@ class Archivebate : MainAPI() {
             }
         }
 
+        val pageItems = doc.select("ul.pagination > li.page-item").map { it.select("a").text() }
+        val lastPage = pageItems[pageItems.size-2].toIntOrNull()
+        val hasNext = page < (lastPage ?: 0)
+//        Log.d("Archivebate", "$lastPage")
+
         return newHomePageResponse(
-            HomePageList("Latest Video", items, true),
-            false
+            HomePageList(request.name, items, true),
+            hasNext
         )
     }
 
