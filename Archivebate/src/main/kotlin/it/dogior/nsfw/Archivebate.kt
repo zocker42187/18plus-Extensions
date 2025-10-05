@@ -143,12 +143,15 @@ class Archivebate : MainAPI() {
                 this.plot = data.info
                 this.posterUrl = data.poster
                 this.duration = strToMin(durationMap[url])
+                val modelPoster = getModelPoster(data.profile.attr("href"))
                 this.recommendations = listOf(
                     newMovieSearchResponse(
                         data.profile.text(),
                         data.profile.attr("href"),
                         TvType.NSFW
-                    )
+                    ){
+                        this.posterUrl = modelPoster
+                    }
                 )
             }
         }
