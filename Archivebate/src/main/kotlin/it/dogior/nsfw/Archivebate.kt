@@ -10,6 +10,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
+import kotlin.random.Random
 
 class Archivebate : MainAPI() {
     override var mainUrl = URL
@@ -188,8 +189,10 @@ class Archivebate : MainAPI() {
 
     private suspend fun getModelPoster(url: String): String? {
         val photosPage = app.get("$url/photos").document
-        val photoUrl = photosPage.selectFirst("img.default_thumbnail")?.attr("src")
-        return photoUrl
+        val photoUrl = photosPage.select("img.default_thumbnail").map{it.attr("src")}
+        if (photoUrl.isEmpty()) return null
+        val random = Random.nextInt(0, photoUrl.size)
+        return photoUrl[random]
     }
 
     suspend fun getVideoData(url: String): VideoInfo {
