@@ -7,6 +7,6 @@ import android.content.Context
 @CloudstreamPlugin
 class ChatrubatePlugin: Plugin() {
     override fun load(context: Context) {
-        registerMainAPI(ChatrubateProvider())
+        registerMainAPI(Chatrubate())
     }
 }

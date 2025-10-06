@@ -4,8 +4,9 @@ package it.dogior.nsfw
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 
-class ChatrubateProvider : MainAPI() {
+class Chatrubate : MainAPI() {
     override var mainUrl = "https://chaturbate.com"
     override var name = "Chatrubate"
     override val hasMainPage = true
@@ -24,11 +25,10 @@ class ChatrubateProvider : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        var offset: Int
-        if (page == 1) {
-            offset = 0
+        val offset: Int = if (page == 1) {
+            0
         } else {
-            offset = 90 * (page - 1)
+            90 * (page - 1)
         }
         val responseList = app.get("$mainUrl${request.data}&offset=$offset")
             .parsedSafe<Response>()!!.rooms.map { room ->
@@ -56,39 +56,36 @@ class ChatrubateProvider : MainAPI() {
 
     }
 
-    override suspend fun search(query: String): List<SearchResponse> {
-
+    override suspend fun search(query: String, page: Int): SearchResponseList? {
         val searchResponse = mutableListOf<LiveSearchResponse>()
 
-        for (i in 0..3) {
-            val results =
-                app.get("$mainUrl/api/ts/roomlist/room-list/?hashtags=$query&limit=90&offset=${i * 90}")
-                    .parsedSafe<Response>()!!.rooms.map { room ->
-                        newLiveSearchResponse(
-                            name = room.username,
-                            url = "$mainUrl/${room.username}",
-                            type = TvType.Live,
-                        ) { this.posterUrl = room.img }
-                    }
-            if (!searchResponse.containsAll(results)) {
-                searchResponse.addAll(results)
-            } else {
-                break
-            }
+        val resp =
+            app.get("$mainUrl/api/ts/roomlist/room-list/?keywords=$query&limit=90&offset=${(page - 1) * 90}")
+        val response = parseJson<Response>(resp.body.string())
+        val hasNext = 90 <= response.rooms.size
 
-            if (results.isEmpty()) break
+        val results = response.rooms.map { room ->
+            newLiveSearchResponse(
+                name = room.username,
+                url = "$mainUrl/${room.username}",
+                type = TvType.Live,
+            ) { this.posterUrl = room.img }
+        }
+        if (!searchResponse.containsAll(results)) {
+            searchResponse.addAll(results)
+        } else {
+            return null
         }
 
-        return searchResponse
+        if (results.isEmpty()) return null
+        return newSearchResponseList(searchResponse, hasNext)
 
     }
 
     override suspend fun load(url: String): LoadResponse {
         val document = app.get(url).document
 
-        val title =
-            document.selectFirst("meta[property=og:title]")?.attr("content")?.trim().toString()
-                .replace("| PornHoarder.tv", "")
+        val title = url.substringAfterLast("/")
         val poster = fixUrlNull(document.selectFirst("[property='og:image']")?.attr("content"))
         val description =
             document.selectFirst("meta[property=og:description]")?.attr("content")?.trim()
@@ -129,7 +126,7 @@ class ChatrubateProvider : MainAPI() {
             newExtractorLink(
                 source = name,
                 name = name,
-                url = m3u8Url.toString() + ".m3u8",
+                url = "$m3u8Url.m3u8",
                 type = ExtractorLinkType.M3U8
             ) {
                 referer = ""
@@ -151,7 +148,7 @@ class ChatrubateProvider : MainAPI() {
     data class Response(
         @JsonProperty("all_rooms_count") val all_rooms_count: String = "",
         @JsonProperty("room_list_id") val room_list_id: String = "",
-        @JsonProperty("total_count") val total_count: String = "",
+        @JsonProperty("total_count") val total_count: Int = 0,
         @JsonProperty("rooms") val rooms: List<Room> = arrayListOf()
     )
 }
