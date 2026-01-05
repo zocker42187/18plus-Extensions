@@ -1,6 +1,5 @@
 package it.dogior.nsfw
 
-import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
@@ -91,7 +90,8 @@ open class Pornhub : MainAPI() {
     override suspend fun load(url: String): LoadResponse {
         val soup = app.get(url, cookies = cookies).document
         val title = soup.selectFirst(".title span")?.text() ?: ""
-        val poster: String? = thumbnails[url]
+        val poster: String? = thumbnails[url] ?: soup.selectFirst("div.video-wrapper .mainPlayerDiv img")?.attr("src")
+            ?: soup.selectFirst("head meta[property=og:image]")?.attr("content")
         val tags = soup.select("div.categoriesWrapper a")
             .map { it.text().trim().replace(", ", "") }
 
@@ -197,7 +197,7 @@ open class Pornhub : MainAPI() {
             imgsrc?.attr("src") ?: imgsrc?.attr("data-src") ?: imgsrc?.attr("data-mediabook")
             ?: imgsrc?.attr("alt") ?: imgsrc?.attr("data-mediumthumb")
             ?: imgsrc?.attr("data-thumb_url")
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }

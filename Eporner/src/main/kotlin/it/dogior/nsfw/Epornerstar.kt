@@ -31,5 +31,6 @@ class Epornerstar : Eporner() {
         "pornstar/lena-paul-v5WPE-xmrhw" to "Lena Paul",
         "pornstar/kendra-sunderland" to "Kendra Sunderland",
         "pornstar/madison-ivy" to "Madison Ivy",
+        "pornstar/eva-veil" to "Eva Veil",
     )
 }
